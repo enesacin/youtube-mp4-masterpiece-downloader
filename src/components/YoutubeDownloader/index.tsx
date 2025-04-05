@@ -27,6 +27,7 @@ const YoutubeDownloader: React.FC = () => {
     videoInfo,
     selectedQuality,
     downloadType,
+    embedCode,
     handleSubmit,
     handleQualityChange,
     handleDownload
@@ -89,6 +90,7 @@ const YoutubeDownloader: React.FC = () => {
         videoInfo={videoInfo}
         selectedQuality={selectedQuality}
         downloadType={downloadType}
+        embedCode={embedCode}
       />
     </div>
   );

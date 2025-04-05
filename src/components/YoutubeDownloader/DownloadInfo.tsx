@@ -7,12 +7,14 @@ interface DownloadInfoProps {
   videoInfo: VideoInfo | null;
   selectedQuality: string;
   downloadType: DownloadType;
+  embedCode?: string | null;
 }
 
 const DownloadInfo: React.FC<DownloadInfoProps> = ({ 
   videoInfo, 
   selectedQuality, 
-  downloadType 
+  downloadType,
+  embedCode
 }) => {
   if (!videoInfo) return null;
   
@@ -37,13 +39,23 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
         <li className="text-xs mt-2 text-gray-500 dark:text-gray-400 italic">
           <span className="flex items-center gap-1">
             <ExternalLink size={12} />
-            İndirme işlemi HTML5 download özelliği kullanılarak gerçekleştirilmektedir.
+            İndirme başlamazsa, tarayıcının yerleşik indirme yöneticisi kullanılacaktır.
           </span>
         </li>
         <li className="text-xs text-gray-500 dark:text-gray-400 italic">
           İndirme başlamazsa, tarayıcınızın pop-up engelleyicisini kontrol edin.
         </li>
       </ul>
+      
+      {embedCode && (
+        <div className="mt-4 border-t pt-3 border-gray-200 dark:border-gray-700">
+          <h4 className="font-medium mb-2">Alternatif İndirme</h4>
+          <div 
+            className="bg-white dark:bg-gray-700 rounded p-2 overflow-hidden" 
+            dangerouslySetInnerHTML={{ __html: embedCode }}
+          />
+        </div>
+      )}
     </div>
   );
 };

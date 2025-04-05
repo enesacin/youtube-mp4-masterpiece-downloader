@@ -49,21 +49,37 @@ export async function downloadVideo(videoInfo: VideoInfo, selectedQuality: strin
 }
 
 export function initiateDownload(downloadUrl: string, fileName: string) {
-  // Doğrudan HTML5 download özelliği ile indirme başlatma
-  const link = document.createElement('a');
-  link.href = downloadUrl;
-  link.setAttribute('download', fileName);
-  link.setAttribute('target', '_blank');
-  link.style.display = 'none';
-  document.body.appendChild(link);
+  // Yeni pencerede doğrudan indirme başlat
+  const newWindow = window.open(downloadUrl, '_blank');
   
-  // Tıklama simüle et
-  link.click();
+  // Yeni pencere açılmadı mı? (Pop-up engelleyici varsa)
+  if (!newWindow) {
+    console.warn('Popup engellendi, alternatif indirme yöntemi deneniyor');
+    
+    // Alternatif yöntem: iframe kullanarak indirme
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    if (iframe.contentWindow) {
+      iframe.contentWindow.location.href = downloadUrl;
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    } else {
+      // Son çare: a etiketi ile indirme
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      link.target = '_blank';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 1000);
+    }
+  }
   
-  // Temizlik
-  setTimeout(() => {
-    document.body.removeChild(link);
-  }, 100);
-  
-  console.log('İndirme işlemi başlatıldı (HTML5 download özelliği ile)');
+  console.log('İndirme işlemi başlatıldı (Yeni pencere veya alternatif yöntem ile)');
 }

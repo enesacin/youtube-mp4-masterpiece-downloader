@@ -15,11 +15,13 @@ export function useYoutubeDownloader() {
   const [isDownloading, setIsDownloading] = useState(false);
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [downloadType, setDownloadType] = useState<DownloadType>('mp4');
+  const [embedCode, setEmbedCode] = useState<string | null>(null);
 
   const handleSubmit = async (inputUrl: string) => {
     setUrl(inputUrl);
     setIsLoading(true);
     setVideoInfo(null);
+    setEmbedCode(null);
     
     if (!isSupabaseConfigured()) {
       toast({
@@ -85,11 +87,15 @@ export function useYoutubeDownloader() {
       
       setDownloadProgress(50);
       
+      if (downloadData.embedCode) {
+        setEmbedCode(downloadData.embedCode);
+      }
+      
       // Dosya adını hazırla
       const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
       
-      // İndirme işlemini başlat - artık doğrudan HTML5 download özelliği kullanıyoruz
+      // İndirme işlemini başlat
       initiateDownload(downloadData.downloadUrl, fileName);
       
       setDownloadProgress(100);
@@ -127,6 +133,7 @@ export function useYoutubeDownloader() {
     isDownloading,
     videoInfo,
     downloadType,
+    embedCode,
     handleSubmit,
     handleQualityChange,
     handleDownload

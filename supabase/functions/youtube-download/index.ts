@@ -46,31 +46,34 @@ serve(async (req) => {
     const videoTitle = oembedData.title || `YouTube Video ${videoId}`;
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     
-    // Doğrudan indirilebilir linkler oluştur
-    let downloadUrl = '';
-    
-    if (downloadType === 'mp3') {
-      // MP3 için doğrudan indirme URL'si
-      downloadUrl = `https://dl.y2mate.com/api/youtube-mp3/convert?url=${encodeURIComponent(youtubeUrl)}&quality=320kbps`;
-    } else {
-      // Video kalitesine göre indirme URL'si
-      const videoQuality = quality === 'highest' ? '1080' : quality;
-      downloadUrl = `https://dl.y2mate.com/api/youtube/convert?url=${encodeURIComponent(youtubeUrl)}&quality=${videoQuality}p`;
-    }
-    
     // Alternatif indirme servisleri
     const alternativeDownloadUrls = {
       'mp3': [
-        `https://dl.y2mate.com/api/youtube-mp3/convert?url=${encodeURIComponent(youtubeUrl)}&quality=320kbps`,
-        `https://cdn.ytmp3cc.cc/download.php?v=${videoId}&format=mp3`,
-        `https://yt-download.org/api/mp3/${videoId}`
+        `https://backend.singlelogin.me/api/converter/convert?url=${encodeURIComponent(youtubeUrl)}&format=mp3`,
+        `https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp3`,
+        `https://ymp4.download/api/json/mp3/${videoId}`
       ],
       'mp4': [
-        `https://dl.y2mate.com/api/youtube/convert?url=${encodeURIComponent(youtubeUrl)}&quality=${quality === 'highest' ? '1080' : quality}p`,
-        `https://cdn.ytmp4.cc/download.php?v=${videoId}&format=mp4&quality=${quality === 'highest' ? '1080' : quality}`,
-        `https://yt-download.org/api/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}`
+        `https://backend.singlelogin.me/api/converter/convert?url=${encodeURIComponent(youtubeUrl)}&format=mp4&quality=${quality === 'highest' ? '1080' : quality}`,
+        `https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp4&quality=${quality === 'highest' ? '1080' : quality}`,
+        `https://ymp4.download/api/json/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}`
       ]
     };
+    
+    // Embed kodları (iframe veya script)
+    const embedCode = {
+      'mp3': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp3"></iframe>`,
+      'mp4': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp4&quality=${quality === 'highest' ? '1080' : quality}"></iframe>`
+    };
+    
+    // Doğrudan indirme bağlantıları
+    const directDownloadUrl = `https://dl.y2mate.com/api/${downloadType === 'mp3' ? 'youtube-mp3' : 'youtube'}/convert?url=${encodeURIComponent(youtubeUrl)}${downloadType === 'mp3' ? '&quality=320kbps' : `&quality=${quality === 'highest' ? '1080' : quality}p`}`;
+    
+    // Daha güvenilir alternatif servisler
+    const yt1sApiUrl = `https://yt1s.com/api/ajaxSearch`;
+    const body = new URLSearchParams();
+    body.append('q', youtubeUrl);
+    body.append('vt', downloadType);
     
     // Başarılı yanıt döndür
     return new Response(
@@ -79,8 +82,9 @@ serve(async (req) => {
         videoId,
         title: videoTitle,
         thumbnail: thumbnailUrl,
-        downloadUrl: downloadType === 'mp3' ? alternativeDownloadUrls.mp3[1] : alternativeDownloadUrls.mp4[1], // En güvenilir servisi kullan
+        downloadUrl: directDownloadUrl, // Doğrudan indirme bağlantısı
         alternativeUrls: downloadType === 'mp3' ? alternativeDownloadUrls.mp3 : alternativeDownloadUrls.mp4,
+        embedCode: downloadType === 'mp3' ? embedCode.mp3 : embedCode.mp4,
         downloadType,
         quality: quality === 'highest' ? '1080' : quality,
         downloadFilename: `${videoTitle.replace(/[^\w\s-]/gi, '')}_${quality}.${downloadType}`
