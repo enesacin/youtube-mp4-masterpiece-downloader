@@ -15,7 +15,7 @@ const YoutubeUrlInput: React.FC<YoutubeUrlInputProps> = ({ onSubmit, isLoading }
   const [isValid, setIsValid] = useState(true);
   
   const validateYoutubeUrl = (input: string): boolean => {
-    // Basic YouTube URL validation regex
+    // YouTube URL doğrulama regex'i
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})(&.*)?$/;
     return youtubeRegex.test(input);
   };
@@ -46,7 +46,7 @@ const YoutubeUrlInput: React.FC<YoutubeUrlInputProps> = ({ onSubmit, isLoading }
       <div className="flex relative">
         <Input
           type="text"
-          placeholder="Paste YouTube video or Shorts URL"
+          placeholder="YouTube video veya Shorts URL'sini yapıştırın"
           value={url}
           onChange={(e) => {
             setUrl(e.target.value);
@@ -73,11 +73,11 @@ const YoutubeUrlInput: React.FC<YoutubeUrlInputProps> = ({ onSubmit, isLoading }
           className="ml-2 bg-youtube-red hover:bg-red-700 transition-colors"
           disabled={isLoading}
         >
-          {isLoading ? 'Processing...' : 'Download'}
+          {isLoading ? 'İşleniyor...' : 'İndir'}
         </Button>
       </div>
       {!isValid && (
-        <p className="text-red-500 text-sm mt-1">Please enter a valid YouTube URL</p>
+        <p className="text-red-500 text-sm mt-1">Lütfen geçerli bir YouTube URL'si girin</p>
       )}
     </form>
   );

@@ -1,23 +1,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Check if environment variables are available
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key';
+// Supabase projesi için URL ve anonim anahtar bilgileri
+const SUPABASE_URL = "https://vzaflfrbuugucbuevfxc.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6YWZsZnJidXVndWNidWV2ZnhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4NzE1MzIsImV4cCI6MjA1OTQ0NzUzMn0.rro6QS8GjrRSdDkgO4ZzDg_dpLDaIVswLQH8f1fRs_8";
 
-// Validate and provide instructions if using default values
-if (!import.meta.env.VITE_SUPABASE_URL) {
-  console.warn('Using default Supabase URL. Please set VITE_SUPABASE_URL environment variable.');
-}
-
-if (!import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn('Using default Supabase anon key. Please set VITE_SUPABASE_ANON_KEY environment variable.');
-}
-
-// Create Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Function to check if Supabase is properly configured
-export const isSupabaseConfigured = () => {
-  return import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Supabase yapılandırmasının doğru olup olmadığını kontrol eden fonksiyon
+export const isSupabaseConfigured = (): boolean => {
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 };
+
+// Supabase client'ı oluştur
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

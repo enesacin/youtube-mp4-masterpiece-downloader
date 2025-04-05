@@ -44,7 +44,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ videoInfo, isLoading }) => 
           onError={(e) => {
             // Resim yüklenemezse yedek göster
             const target = e.target as HTMLImageElement;
-            target.src = 'https://placehold.co/1280x720/333/FFF.webp?text=Video+Preview';
+            target.src = 'https://placehold.co/1280x720/333/FFF.webp?text=Video+Önizleme';
           }}
         />
         <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 text-xs rounded flex items-center gap-1">

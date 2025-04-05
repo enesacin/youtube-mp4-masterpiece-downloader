@@ -22,14 +22,14 @@ const VideoQualitySelector: React.FC<VideoQualitySelectorProps> = ({
 }) => {
   return (
     <div className="flex items-center space-x-2">
-      <span className="text-sm font-medium">Quality:</span>
+      <span className="text-sm font-medium">Kalite:</span>
       <Select
         value={selectedQuality}
         onValueChange={onQualityChange}
         disabled={disabled}
       >
         <SelectTrigger className="w-[140px] h-9">
-          <SelectValue placeholder="Select quality" />
+          <SelectValue placeholder="Kalite seç" />
         </SelectTrigger>
         <SelectContent>
           {qualities.map((quality) => (

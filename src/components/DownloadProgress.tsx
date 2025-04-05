@@ -13,7 +13,7 @@ const DownloadProgress: React.FC<DownloadProgressProps> = ({ progress, isVisible
   return (
     <div className="w-full space-y-2 mt-4">
       <div className="flex justify-between text-sm">
-        <span>Downloading...</span>
+        <span>İndiriliyor...</span>
         <span>{progress}%</span>
       </div>
       <Progress value={progress} className="h-2" />

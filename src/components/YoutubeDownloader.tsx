@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import YoutubeUrlInput from './YoutubeUrlInput';
@@ -64,7 +65,7 @@ const YoutubeDownloader: React.FC = () => {
       
       toast({
         title: "Video bilgisi alındı",
-        description: "Videouzu tercih ettiğiniz kalitede indirebilirsiniz."
+        description: "Videoyu tercih ettiğiniz kalitede indirebilirsiniz."
       });
     } catch (error) {
       console.error("Video bilgisi alınırken hata:", error);
