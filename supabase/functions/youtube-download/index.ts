@@ -46,32 +46,28 @@ serve(async (req) => {
     const videoTitle = oembedData.title || `YouTube Video ${videoId}`;
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     
-    // Alternatif indirme servisleri - daha güvenilir servisler seçildi
-    const alternativeDownloadUrls = {
-      'mp3': [
-        `https://api.vevioz.com/api/button/mp3/${videoId}`,
-        `https://api.ytbvideoly.com/api/button/mp3/${videoId}`,
-        `https://api.y2mate.guru/api/convert/mp3/${videoId}`
+    // Daha güvenilir indirme servisleri
+    const downloadServices = {
+      mp3: [
+        `https://api.savefrom.to/api/convert?url=${encodeURIComponent(youtubeUrl)}&action=audio&format=mp3`,
+        `https://api.recordmp3.co/api/dl/audio?v=${videoId}`,
+        `https://dl1.savemedia.website/download/audio/mp3/${videoId}`
       ],
-      'mp4': [
-        `https://api.vevioz.com/api/button/videos/${videoId}/${quality === 'highest' ? '1080' : quality}`,
-        `https://api.ytbvideoly.com/api/button/videos/${videoId}/${quality === 'highest' ? '1080' : quality}`,
-        `https://api.y2mate.guru/api/convert/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}`
+      mp4: [
+        `https://api.savefrom.to/api/convert?url=${encodeURIComponent(youtubeUrl)}&action=video&format=mp4&quality=${quality === 'highest' ? '1080' : quality}`,
+        `https://dl1.savemedia.website/download/video/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}`,
+        `https://ytdl.vsrv.one/api/download?v=${videoId}&f=mp4&q=${quality === 'highest' ? '1080' : quality}`
       ]
     };
     
-    // Embed kodları (iframe)
+    // Embed kodları (iframe) - ilk indirme başarısız olursa kullanılacak
     const embedCode = {
-      'mp3': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://api.vevioz.com/api/widget/mp3/${videoId}"></iframe>`,
-      'mp4': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://api.vevioz.com/api/widget/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}"></iframe>`
+      mp3: `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://getn.topsandtees.space/z8Ajkj?video_id=${videoId}&t=mp3"></iframe>`,
+      mp4: `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://getn.topsandtees.space/z8Ajkj?video_id=${videoId}&t=mp4"></iframe>`
     };
     
-    // Çalışan doğrudan indirme bağlantıları (SSYouTube hizmeti)
-    const ssyoutubeUrl = `https://ssyoutube.com/api/convert?url=${encodeURIComponent(youtubeUrl)}`;
-    const savefromUrl = `https://en.savefrom.net/download-from-youtube/#url=${encodeURIComponent(youtubeUrl)}`;
-    
-    // Doğrudan indirme bağlantısı
-    const directDownloadUrl = `https://api.vevioz.com/api/button/${downloadType === 'mp3' ? 'mp3' : 'videos'}/${videoId}${downloadType === 'mp4' ? `/${quality === 'highest' ? '1080' : quality}` : ''}`;
+    // Daha güvenilir indirme bağlantıları
+    const directDownloadUrl = downloadServices[downloadType][0];
     
     // Başarılı yanıt döndür
     return new Response(
@@ -81,8 +77,7 @@ serve(async (req) => {
         title: videoTitle,
         thumbnail: thumbnailUrl,
         downloadUrl: directDownloadUrl,
-        fallbackUrl: downloadType === 'mp3' ? ssyoutubeUrl : savefromUrl,
-        alternativeUrls: downloadType === 'mp3' ? alternativeDownloadUrls.mp3 : alternativeDownloadUrls.mp4,
+        fallbackUrls: downloadType === 'mp3' ? downloadServices.mp3 : downloadServices.mp4,
         embedCode: downloadType === 'mp3' ? embedCode.mp3 : embedCode.mp4,
         downloadType,
         quality: quality === 'highest' ? '1080' : quality,

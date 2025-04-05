@@ -28,10 +28,11 @@ const YoutubeDownloader: React.FC = () => {
     selectedQuality,
     downloadType,
     embedCode,
-    fallbackUrl,
+    fallbackUrls,
     handleSubmit,
     handleQualityChange,
-    handleDownload
+    handleDownload,
+    handleFallbackDownload
   } = useYoutubeDownloader();
 
   return (
@@ -92,7 +93,8 @@ const YoutubeDownloader: React.FC = () => {
         selectedQuality={selectedQuality}
         downloadType={downloadType}
         embedCode={embedCode}
-        fallbackUrl={fallbackUrl}
+        fallbackUrls={fallbackUrls}
+        onFallbackDownload={handleFallbackDownload}
       />
     </div>
   );

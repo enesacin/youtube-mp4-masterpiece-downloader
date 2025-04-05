@@ -9,7 +9,8 @@ interface DownloadInfoProps {
   selectedQuality: string;
   downloadType: DownloadType;
   embedCode?: string | null;
-  fallbackUrl?: string | null;
+  fallbackUrls?: string[] | null;
+  onFallbackDownload?: (url: string) => void;
 }
 
 const DownloadInfo: React.FC<DownloadInfoProps> = ({ 
@@ -17,7 +18,8 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
   selectedQuality, 
   downloadType,
   embedCode,
-  fallbackUrl
+  fallbackUrls,
+  onFallbackDownload
 }) => {
   if (!videoInfo) return null;
   
@@ -25,12 +27,6 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
     if (quality === 'highest') return 'En Yüksek (1080p)';
     if (quality === 'mp3') return 'MP3 (Sadece Ses)';
     return `${quality}p`;
-  };
-
-  const handleFallbackClick = () => {
-    if (fallbackUrl) {
-      window.open(fallbackUrl, '_blank');
-    }
   };
   
   return (
@@ -53,21 +49,29 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
         </li>
       </ul>
 
-      {fallbackUrl && (
-        <Button 
-          onClick={handleFallbackClick} 
-          variant="outline" 
-          size="sm" 
-          className="mt-3 w-full flex items-center justify-center gap-2"
-        >
-          <AlertCircle size={14} />
-          Alternatif İndirme Sayfasını Aç
-        </Button>
+      {fallbackUrls && fallbackUrls.length > 0 && (
+        <div className="mt-3 space-y-2">
+          <p className="text-xs font-medium">Alternatif İndirme Bağlantıları:</p>
+          <div className="grid grid-cols-2 gap-2">
+            {fallbackUrls.map((url, index) => (
+              <Button 
+                key={index}
+                onClick={() => onFallbackDownload && onFallbackDownload(url)}
+                variant="outline" 
+                size="sm"
+                className="text-xs flex items-center justify-center gap-1"
+              >
+                <Download size={12} />
+                Alternatif {index + 1}
+              </Button>
+            ))}
+          </div>
+        </div>
       )}
       
       {embedCode && (
         <div className="mt-4 border-t pt-3 border-gray-200 dark:border-gray-700">
-          <h4 className="font-medium mb-2">Alternatif İndirme</h4>
+          <h4 className="font-medium mb-2">Alternatif İndirme Yöntemi</h4>
           <div 
             className="bg-white dark:bg-gray-700 rounded p-2 overflow-hidden" 
             dangerouslySetInnerHTML={{ __html: embedCode }}

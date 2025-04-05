@@ -49,36 +49,25 @@ export async function downloadVideo(videoInfo: VideoInfo, selectedQuality: strin
 }
 
 export function initiateDownload(downloadUrl: string, fileName: string) {
-  // Dosyayı doğrudan indirmek için fetch kullanma
-  fetch(downloadUrl)
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`İndirme başarısız oldu: ${response.status} ${response.statusText}`);
-      }
-      return response.blob();
-    })
-    .then(blob => {
-      // Blob'dan bir URL oluşturma
-      const blobUrl = window.URL.createObjectURL(blob);
-      
-      // URL kullanarak bir indirme bağlantısı oluşturma
-      const downloadLink = document.createElement('a');
-      downloadLink.href = blobUrl;
-      downloadLink.download = fileName;
-      downloadLink.style.display = 'none';
-      document.body.appendChild(downloadLink);
-      
-      // İndirme işlemini başlatma
-      downloadLink.click();
-      
-      // Temizleme
-      setTimeout(() => {
-        document.body.removeChild(downloadLink);
-        window.URL.revokeObjectURL(blobUrl);
-      }, 1000);
-    })
-    .catch(error => {
-      console.error("İndirme sırasında hata:", error);
-      alert(`İndirme sırasında bir hata oluştu: ${error.message}`);
-    });
+  // Doğrudan indirme bağlantısı oluşturma
+  const downloadLink = document.createElement('a');
+  downloadLink.href = downloadUrl;
+  downloadLink.target = '_blank';
+  downloadLink.rel = 'noopener noreferrer';
+  downloadLink.download = fileName; // Bu, tarayıcıya dosyayı indirmesi gerektiğini belirtir
+  downloadLink.style.display = 'none';
+  document.body.appendChild(downloadLink);
+  
+  // Bağlantıyı tıklama
+  downloadLink.click();
+  
+  // Temizleme
+  setTimeout(() => {
+    document.body.removeChild(downloadLink);
+  }, 100);
+  
+  // Tarayıcı bloklayabilir, bu durumda alternatif yöntem olarak yeni sekmede açalım
+  setTimeout(() => {
+    window.open(downloadUrl, '_blank');
+  }, 300);
 }

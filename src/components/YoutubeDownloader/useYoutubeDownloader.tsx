@@ -16,14 +16,14 @@ export function useYoutubeDownloader() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [downloadType, setDownloadType] = useState<DownloadType>('mp4');
   const [embedCode, setEmbedCode] = useState<string | null>(null);
-  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+  const [fallbackUrls, setFallbackUrls] = useState<string[] | null>(null);
 
   const handleSubmit = async (inputUrl: string) => {
     setUrl(inputUrl);
     setIsLoading(true);
     setVideoInfo(null);
     setEmbedCode(null);
-    setFallbackUrl(null);
+    setFallbackUrls(null);
     
     if (!isSupabaseConfigured()) {
       toast({
@@ -48,7 +48,7 @@ export function useYoutubeDownloader() {
       toast({
         variant: "destructive",
         title: "Video bilgisi alınamadı",
-        description: "Lütfen URL'yi kontrol edin ve tekrar deneyin."
+        description: error instanceof Error ? error.message : "Lütfen URL'yi kontrol edin ve tekrar deneyin."
       });
     } finally {
       setIsLoading(false);
@@ -93,8 +93,8 @@ export function useYoutubeDownloader() {
         setEmbedCode(downloadData.embedCode);
       }
       
-      if (downloadData.fallbackUrl) {
-        setFallbackUrl(downloadData.fallbackUrl);
+      if (downloadData.fallbackUrls) {
+        setFallbackUrls(downloadData.fallbackUrls);
       }
       
       // Dosya adını hazırla
@@ -124,12 +124,23 @@ export function useYoutubeDownloader() {
       
       // Gömülü embed kodu varsa gösterilecek
       if (!embedCode && videoInfo.videoId) {
-        const fallbackEmbed = `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://api.vevioz.com/api/widget/${downloadType === 'mp3' ? 'mp3' : 'mp4'}/${videoInfo.videoId}"></iframe>`;
+        const fallbackEmbed = `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://getn.topsandtees.space/z8Ajkj?video_id=${videoInfo.videoId}&t=${downloadType}"></iframe>`;
         setEmbedCode(fallbackEmbed);
       }
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleFallbackDownload = (url: string) => {
+    if (!url) return;
+    
+    window.open(url, '_blank');
+    
+    toast({
+      title: "Alternatif indirme yöntemi",
+      description: "Alternatif indirme sayfası açıldı. Lütfen indirme talimatlarını takip edin."
+    });
   };
 
   return {
@@ -141,9 +152,10 @@ export function useYoutubeDownloader() {
     videoInfo,
     downloadType,
     embedCode,
-    fallbackUrl,
+    fallbackUrls,
     handleSubmit,
     handleQualityChange,
-    handleDownload
+    handleDownload,
+    handleFallbackDownload
   };
 }
