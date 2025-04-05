@@ -133,14 +133,20 @@ export function useYoutubeDownloader() {
       
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
       
-      setTimeout(() => {
-        window.open(data.downloadUrl, '_blank');
-        
-        toast({
-          title: "İndirme tamamlandı!",
-          description: `${fileName} dosyası tarayıcınızda açıldı.`,
-        });
-      }, 1000);
+      // Simüle edilmiş indirme işlemi - gerçek bir indirme yerine
+      // Bu bir tarayıcı tarafından desteklenen indirme bağlantısı yaratır
+      const a = document.createElement('a');
+      a.href = data.downloadUrl;
+      a.download = fileName;
+      a.target = '_blank';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      toast({
+        title: "İndirme başladı!",
+        description: `${fileName} dosyası indiriliyor.`,
+      });
       
     } catch (error) {
       console.error("İndirme hatası:", error);

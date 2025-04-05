@@ -41,9 +41,9 @@ serve(async (req) => {
       Math.floor(Math.random() * 50) + 15;
     
     // Bu bir simülasyondur - gerçek indirme fonksiyonu uygulanabilir
-    // Gerçek uygulamada, youtube-dl veya benzeri bir araç kullanabilirsiniz
+    // Gerçek uygulama için youtube-dl veya benzer bir uzak sunucuda çalışan servis kullanılmalıdır
     
-    // Simülasyon indirme URL'si
+    // Simülasyon indirme URL'si - gerçek bir indirme URL'si sunucu tarafında oluşturulmalıdır
     const downloadUrl = `https://www.youtube.com/watch?v=${videoId}`;
     
     // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
