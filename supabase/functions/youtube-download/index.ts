@@ -18,33 +18,63 @@ serve(async (req) => {
       )
     }
 
-    // Bu noktada gerçek bir uygulamada, YouTube'dan video indirmek için bir kütüphane kullanılırdı
-    // Örnek olarak, ytdl-core kullanılabilir ancak bu Deno ortamında çalışmayabilir
-    // Burada indirme işlemini simüle ediyoruz ve indirme URL'si döndürüyoruz
+    console.log("İndirme isteği alındı:", { videoId, quality, downloadType });
 
-    // Gerçek bir uygulamada, videoyu Supabase Storage'a yükleyip URL'sini döndürebilirsiniz
-    
+    // Input doğrulama
+    if (!videoId.match(/^[a-zA-Z0-9_-]{11}$/)) {
+      return new Response(
+        JSON.stringify({ error: 'Geçersiz video ID formatı' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    // Güvenli bir dönüş değeri oluşturalım
+    const videoTitle = `YouTube Video ${videoId}`;
+
+    // Kalite ve dosya tipi ayarları
     const qualityLabel = quality === 'highest' ? 'En Yüksek Kalite' : 
                         quality === 'mp3' ? 'MP3 Ses' : `${quality}p`;
     
     const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
+    const fileSizeEstimate = downloadType === 'mp3' ? 
+      Math.floor(Math.random() * 15) + 2 : 
+      Math.floor(Math.random() * 50) + 15;
     
-    // Bu bir simülasyondur. Gerçek uygulamada burası indirme mantığı ile değiştirilmelidir
+    // Bu bir simülasyondur - gerçek indirme fonksiyonu uygulanabilir
+    // Gerçek uygulamada, youtube-dl veya benzeri bir araç kullanabilirsiniz
+    
+    // Simülasyon indirme URL'si
+    const downloadUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    
+    // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    console.log("İndirme simülasyonu tamamlandı:", {
+      videoId,
+      quality,
+      downloadType,
+      fileName: `youtube-${videoId}.${fileExtension}`
+    });
+    
     return new Response(
       JSON.stringify({
-        downloadUrl: `https://example.com/download/${videoId}?quality=${quality}&type=${downloadType}`,
-        fileName: `youtube-${videoId}-${quality}.${fileExtension}`,
-        fileSize: Math.floor(Math.random() * 100) + 'MB',
+        success: true,
+        downloadUrl: downloadUrl,
+        fileName: `youtube-${videoId}.${fileExtension}`,
+        fileSize: `${fileSizeEstimate}MB`,
         quality: qualityLabel,
-        message: 'Indirme başarılı! (Simülasyon)',
-        // Not: Gerçek bir uygulamada, bu yanıt videoyu indirmek için gerçek bir 
-        // URL veya dosya içeriği içerecektir
+        title: videoTitle,
+        message: 'İndirme başarılı! (Simülasyon)',
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error("İndirme işlemi hatası:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        stack: error.stack
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }

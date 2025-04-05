@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import YoutubeUrlInput from './YoutubeUrlInput';
@@ -104,10 +103,21 @@ const YoutubeDownloader: React.FC = () => {
     setDownloadProgress(0);
     
     try {
-      for (let i = 0; i <= 100; i += 10) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        setDownloadProgress(Math.min(i, 100));
-      }
+      const progressInterval = setInterval(() => {
+        setDownloadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+      
+      console.log("İndirme isteği gönderiliyor:", {
+        videoId: videoInfo.videoId,
+        quality: selectedQuality,
+        downloadType
+      });
       
       const { data, error } = await supabase.functions.invoke('youtube-download', {
         body: { 
@@ -117,38 +127,37 @@ const YoutubeDownloader: React.FC = () => {
         }
       });
       
+      clearInterval(progressInterval);
+      setDownloadProgress(100);
+      
       if (error) {
-        throw new Error(error.message);
+        console.error("İndirme hatası:", error);
+        throw new Error(error.message || "İndirme sırasında bir hata oluştu");
       }
       
-      if (!data) {
-        throw new Error("İndirme işlemi başarısız");
+      if (!data || !data.success) {
+        throw new Error(data?.message || "İndirme işlemi başarısız");
       }
+      
+      console.log("İndirme cevabı:", data);
       
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
       
-      const downloadUrl = data.downloadUrl;
-      
-      if (downloadUrl) {
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-      
-      toast({
-        title: "İndirme tamamlandı!",
-        description: `${videoInfo.title} ${downloadType === 'mp3' ? 'ses dosyası' : 'video'} olarak indirildi.`
-      });
+      setTimeout(() => {
+        window.open(data.downloadUrl, '_blank');
+        
+        toast({
+          title: "İndirme tamamlandı!",
+          description: `${fileName} dosyası tarayıcınızda açıldı.`,
+        });
+      }, 1000);
       
     } catch (error) {
       console.error("İndirme hatası:", error);
       toast({
         variant: "destructive",
         title: "İndirme başarısız",
-        description: "İndirme sırasında bir hata oluştu. Lütfen tekrar deneyin."
+        description: error instanceof Error ? error.message : "İndirme sırasında bir hata oluştu. Lütfen tekrar deneyin."
       });
     } finally {
       setIsDownloading(false);
