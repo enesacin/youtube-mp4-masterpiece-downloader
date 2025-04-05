@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import YoutubeUrlInput from './YoutubeUrlInput';
@@ -7,12 +6,7 @@ import DownloadProgress from './DownloadProgress';
 import VideoPreview from './VideoPreview';
 import { Download, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { createClient } from '@supabase/supabase-js';
-
-// Supabase istemcisini oluştur
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/lib/supabase';
 
 const AVAILABLE_QUALITIES: Quality[] = [
   { label: 'En Yüksek', value: 'highest' },
@@ -44,7 +38,6 @@ const YoutubeDownloader: React.FC = () => {
     setVideoInfo(null);
     
     try {
-      // Supabase edge fonksiyonunu çağır
       const { data, error } = await supabase.functions.invoke('youtube-info', {
         body: { url: inputUrl }
       });
@@ -77,7 +70,6 @@ const YoutubeDownloader: React.FC = () => {
 
   const handleQualityChange = (quality: string) => {
     setSelectedQuality(quality);
-    // Kalite seçimine göre indirme tipini ayarla
     if (quality === 'mp3') {
       setDownloadType('mp3');
     } else {
@@ -92,13 +84,11 @@ const YoutubeDownloader: React.FC = () => {
     setDownloadProgress(0);
     
     try {
-      // İndirme işlemini simüle et
       for (let i = 0; i <= 100; i += 10) {
         await new Promise(resolve => setTimeout(resolve, 300));
         setDownloadProgress(Math.min(i, 100));
       }
       
-      // Supabase edge fonksiyonunu çağır
       const { data, error } = await supabase.functions.invoke('youtube-download', {
         body: { 
           videoId: videoInfo.videoId,
@@ -115,15 +105,11 @@ const YoutubeDownloader: React.FC = () => {
         throw new Error("İndirme işlemi başarısız");
       }
       
-      // İndirme bağlantısını simüle et (gerçek uygulamada indirme URL'si döndürülmelidir)
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
       
-      // Gerçek bir uygulamada, burası bir 'blob' indirmesi veya yönlendirme olacaktır
-      // Simülasyon için, bir dosya indirme diyaloğu açacağız
       const downloadUrl = data.downloadUrl;
       
       if (downloadUrl) {
-        // Bir indirme bağlantısı oluştur
         const link = document.createElement('a');
         link.href = downloadUrl;
         link.download = fileName;
