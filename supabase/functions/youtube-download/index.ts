@@ -31,112 +31,57 @@ serve(async (req) => {
     // YouTube URL oluştur
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
     
-    // Video bilgisi alımı
-    const videoInfoCommand = new Deno.Command("yt-dlp", {
-      args: ["--dump-json", youtubeUrl],
-    });
+    // Not: Supabase Edge Functions, dış süreçleri çalıştırmaya izin vermez (yt-dlp gibi)
+    // Bu nedenle doğrudan YouTube API'sini kullanmamız gerekiyor
     
-    const videoInfoOutput = await videoInfoCommand.output();
+    // Video bilgisi almak için YouTube oEmbed API'sini kullanalım
+    const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`;
+    const oembedResponse = await fetch(oembedUrl);
+    const oembedData = await oembedResponse.json();
     
-    if (!videoInfoOutput.success) {
-      console.error("Video bilgisi alma hatası:", new TextDecoder().decode(videoInfoOutput.stderr));
+    const videoTitle = oembedData.title || `YouTube Video ${videoId}`;
+    const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    
+    // Kalite bilgisini kullanarak videoyu indirmek için bir link oluşturalım
+    let videoUrl = '';
+    let qualityLabel = '';
+    
+    if (downloadType === 'mp3') {
+      // Doğrudan YouTube'dan MP3 indirmek mümkün değil
+      // Bu noktada son kullanıcıya bir mesaj gösterilebilir
       return new Response(
-        JSON.stringify({ error: "Video bilgisi alınamadı" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({
+          error: "Supabase Edge Functions üzerinde doğrudan YouTube'dan MP3 indirmek mümkün değildir. Bir sunucu uygulamasına ihtiyaç vardır."
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
-    }
-    
-    // Video bilgilerini JSON olarak analiz et
-    const videoInfoText = new TextDecoder().decode(videoInfoOutput.stdout);
-    const videoInfo = JSON.parse(videoInfoText);
-    
-    const videoTitle = videoInfo.title || `YouTube Video ${videoId}`;
-    const thumbnailUrl = videoInfo.thumbnail || "";
-    
-    // İndirme formatı ve kalite ayarları
-    let format = "";
-    let outputFileName = "";
-    
-    if (downloadType === "mp3") {
-      // MP3 ses indirme
-      format = "bestaudio[ext=m4a]/bestaudio";
-      outputFileName = `youtube-${videoId}.mp3`;
     } else {
-      // Video indirme
-      if (quality === "highest") {
-        format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best";
+      // Video indirme için seçenek oluşturalım
+      // Not: Bu, doğrudan YouTube'dan video indirmek için çalışmayacaktır
+      // Sadece arayüz testleri için bir yanıt döndürüyoruz
+      
+      if (quality === 'highest') {
+        qualityLabel = 'En Yüksek Kalite';
+      } else if (quality === 'mp3') {
+        qualityLabel = 'MP3 Ses';
       } else {
-        // Belirli çözünürlüğü belirt, örn: 720
-        format = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}][ext=mp4]/best[height<=${quality}]`;
+        qualityLabel = `${quality}p`;
       }
-      outputFileName = `youtube-${videoId}.mp4`;
-    }
-    
-    // İndirme komutunu oluştur
-    const downloadCommand = new Deno.Command("yt-dlp", {
-      args: [
-        "-f", format,
-        "-o", `/tmp/${outputFileName}`,
-        youtubeUrl
-      ],
-    });
-    
-    console.log("İndirme komutu çalıştırılıyor:", {
-      format,
-      outputFile: `/tmp/${outputFileName}`,
-      url: youtubeUrl
-    });
-    
-    // Videoyu indir
-    const downloadOutput = await downloadCommand.output();
-    
-    if (!downloadOutput.success) {
-      console.error("İndirme hatası:", new TextDecoder().decode(downloadOutput.stderr));
+      
+      // Kullanıcıya bir bilgi mesajı
       return new Response(
-        JSON.stringify({ error: "Video indirilemedi" }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        JSON.stringify({
+          success: false,
+          error: "Supabase Edge Functions üzerinde doğrudan YouTube video indirme işlemi desteklenmemektedir.",
+          message: "YouTube video indirme işlemi için yt-dlp gibi araçların çalıştırılabildiği bir sunucu gereklidir. Supabase Edge Functions, güvenlik nedeniyle alt süreçleri çalıştırmaya izin vermez.",
+          videoId,
+          title: videoTitle,
+          thumbnail: thumbnailUrl,
+          quality: qualityLabel
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
-    
-    // İndirilen dosyanın boyutunu kontrol et
-    const fileInfo = await Deno.stat(`/tmp/${outputFileName}`);
-    const fileSize = Math.ceil(fileInfo.size / (1024 * 1024)); // MB cinsinden
-    
-    // Dosyayı oku
-    const fileContent = await Deno.readFile(`/tmp/${outputFileName}`);
-    
-    // MIME tipini belirle
-    const contentType = downloadType === "mp3" ? "audio/mpeg" : "video/mp4";
-    
-    // Dosyayı sil (temizlik)
-    try {
-      await Deno.remove(`/tmp/${outputFileName}`);
-    } catch (e) {
-      console.error("Geçici dosya silinemedi:", e);
-    }
-    
-    // Dosya içeriğini base64 olarak kodla
-    const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileContent)));
-    
-    const qualityLabel = quality === 'highest' ? 'En Yüksek Kalite' : 
-                        quality === 'mp3' ? 'MP3 Ses' : `${quality}p`;
-    
-    // Base64 kodlu dosyayı Data URL formatında dön
-    const dataUrl = `data:${contentType};base64,${base64Content}`;
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        downloadUrl: dataUrl,
-        fileName: outputFileName,
-        fileSize: `${fileSize}MB`,
-        quality: qualityLabel,
-        title: videoTitle,
-        thumbnail: thumbnailUrl,
-        message: 'Video başarıyla indirildi!'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
   } catch (error) {
     console.error("İndirme işlemi hatası:", error);
     return new Response(

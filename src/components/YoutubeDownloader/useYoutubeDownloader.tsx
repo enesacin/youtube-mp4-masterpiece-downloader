@@ -90,23 +90,12 @@ export function useYoutubeDownloader() {
     }
     
     setIsDownloading(true);
-    setDownloadProgress(0);
+    setDownloadProgress(10); // Başlangıç değeri
     
     try {
-      const progressInterval = setInterval(() => {
-        setDownloadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-      
-      console.log("İndirme isteği gönderiliyor:", {
-        videoId: videoInfo.videoId,
-        quality: selectedQuality,
-        downloadType
+      toast({
+        title: "Bilgilendirme",
+        description: "YouTube video indirme işlemi şu anda direkt olarak desteklenmemektedir. Supabase Edge Functions, yt-dlp gibi alt süreçleri çalıştıramaz."
       });
       
       const { data, error } = await supabase.functions.invoke('youtube-download', {
@@ -117,7 +106,6 @@ export function useYoutubeDownloader() {
         }
       });
       
-      clearInterval(progressInterval);
       setDownloadProgress(100);
       
       if (error) {
@@ -125,74 +113,37 @@ export function useYoutubeDownloader() {
         throw new Error(error.message || "İndirme sırasında bir hata oluştu");
       }
       
-      if (!data || !data.success) {
-        throw new Error(data?.message || "İndirme işlemi başarısız");
+      if (data.error) {
+        console.error("İndirme cevap hatası:", data.error);
+        throw new Error(data.error || "İndirme işlemi başarısız");
       }
       
-      console.log("İndirme cevabı:", data);
+      // Alternatif olarak kullanıcıya YouTube indirme sitesinin bağlantısını gösterelim
+      const youtubeUrl = `https://www.youtube.com/watch?v=${videoInfo.videoId}`;
       
-      // Tarayıcıya uygun dosya adı oluşturma
-      const safeFileName = videoInfo.title.replace(/[^\w\s]/gi, '') || videoInfo.videoId;
-      const fileName = `${safeFileName}_${selectedQuality}.${downloadType}`;
+      toast({
+        title: "Önerilen Alternatif",
+        description: "Çevrimiçi YouTube indirme sitelerini kullanabilir veya kendi sunucunuza yt-dlp kurarak video indirebilirsiniz.",
+      });
       
-      // Dosya indirme işlemi
-      const url = data.downloadUrl;
+      // YouTube'a direkt link sağlayalım
+      const link = document.createElement('a');
+      link.href = youtubeUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
       
-      // Dosyayı indirmek için Fetch API kullanalım
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`İndirme başarısız: ${response.status} ${response.statusText}`);
-        }
-        
-        const blob = await response.blob();
-        const downloadUrl = URL.createObjectURL(blob);
-        
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = fileName;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        
-        // Temizlik
-        setTimeout(() => {
-          document.body.removeChild(link);
-          URL.revokeObjectURL(downloadUrl);
-        }, 100);
-        
-        toast({
-          title: "İndirme tamamlandı!",
-          description: `${fileName} dosyası indirildi.`,
-        });
-      } catch (downloadErr) {
-        console.error("Blob indirme hatası:", downloadErr);
-        
-        // Alternatif indirme yöntemi
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        
-        setTimeout(() => {
-          document.body.removeChild(link);
-        }, 100);
-        
-        toast({
-          title: "İndirme başlatıldı",
-          description: `Tarayıcınız dosyayı indirmeye başladı.`,
-        });
-      }
+      setTimeout(() => {
+        document.body.removeChild(link);
+      }, 100);
       
     } catch (error) {
       console.error("İndirme hatası:", error);
       toast({
         variant: "destructive",
         title: "İndirme başarısız",
-        description: error instanceof Error ? error.message : "İndirme sırasında bir hata oluştu. Lütfen tekrar deneyin."
+        description: error instanceof Error ? error.message : "İndirme sırasında bir hata oluştu. Supabase Edge Functions'ın sınırlamaları nedeniyle, YouTube video indirme işlemi desteklenmemektedir."
       });
     } finally {
       setIsDownloading(false);
