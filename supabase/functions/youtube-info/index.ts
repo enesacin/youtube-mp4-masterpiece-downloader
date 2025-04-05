@@ -30,6 +30,8 @@ serve(async (req) => {
       )
     }
 
+    console.log("İşlenen video ID:", videoId);
+
     // YouTube sayfasını getir
     const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`)
     const html = await response.text()
@@ -73,6 +75,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error("YouTube bilgisi alma hatası:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -82,11 +85,26 @@ serve(async (req) => {
 
 function extractVideoId(url: string): string | null {
   // Normal video URL'leri (www.youtube.com ve youtu.be)
-  let match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
+  let match = url.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/)
   
   // Bulunamadıysa, Shorts URL'i için kontrol et
   if (!match) {
-    match = url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/)
+    match = url.match(/(?:https?:\/\/)?(?:www\.|m\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/)
+  }
+  
+  // Embed URL'leri için kontrol et
+  if (!match) {
+    match = url.match(/(?:https?:\/\/)?(?:www\.|m\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/)
+  }
+  
+  // Playlist içindeki videolar için kontrol et (v parametresi)
+  if (!match) {
+    const urlObj = new URL(url);
+    const params = new URLSearchParams(urlObj.search);
+    const videoId = params.get('v');
+    if (videoId && videoId.length === 11) {
+      return videoId;
+    }
   }
   
   return match ? match[1] : null
