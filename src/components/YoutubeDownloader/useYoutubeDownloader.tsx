@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -133,18 +132,33 @@ export function useYoutubeDownloader() {
       
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
       
-      // Tarayıcıda doğrudan indirme işlemini başlat
-      const a = document.createElement('a');
-      a.href = data.downloadUrl;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      toast({
-        title: "İndirme başladı!",
-        description: `${fileName} dosyası indiriliyor.`,
-      });
+      try {
+        const link = document.createElement('a');
+        link.href = data.downloadUrl;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+        }, 100);
+        
+        toast({
+          title: "İndirme başladı!",
+          description: `${fileName} dosyası indiriliyor.`,
+        });
+      } catch (downloadErr) {
+        console.error("Dosya indirme hatası:", downloadErr);
+        
+        window.open(data.downloadUrl, '_blank');
+        
+        toast({
+          title: "İndirme başladı",
+          description: "İndirme otomatik başlamadıysa, açılan sayfada dosyayı kaydedin.",
+        });
+      }
       
     } catch (error) {
       console.error("İndirme hatası:", error);

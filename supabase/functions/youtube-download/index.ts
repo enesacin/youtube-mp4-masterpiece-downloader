@@ -40,19 +40,10 @@ serve(async (req) => {
       Math.floor(Math.random() * 15) + 2 : 
       Math.floor(Math.random() * 50) + 15;
     
-    // Bu bir simülasyondur - gerçek indirme fonksiyonu uygulanabilir
-    // Gerçek uygulama için youtube-dl veya benzer bir uzak sunucuda çalışan servis kullanılmalıdır
-    
-    // Simülasyon - doğrudan indirme URL'si oluşturuyoruz
-    // Gerçek bir downloader servisinde bu bir dosya içeriği olurdu
-    // Şimdilik YouTube'un video sayfasına değil, doğrudan indirilebilir bir link oluşturuyoruz
-    
-    // Not: Bu yalnızca bir simülasyondur ve gerçek bir indirme sağlamaz
-    // Gerçek bir serviste, bu bir dosya içeriği veya başka bir download URL olurdu
-    const baseUrl = "https://storage.googleapis.com/aitechtm/";
+    // Simülasyon - Örnek dosya URL'leri (Geçerli ve herkese açık URL'ler)
     const downloadUrl = downloadType === 'mp3' 
-      ? `${baseUrl}sample-audio.mp3` 
-      : `${baseUrl}sample-video.mp4`;
+      ? 'https://file-examples.com/storage/fe5467a6a163010b197fb20/2017/11/file_example_MP3_700KB.mp3'
+      : 'https://file-examples.com/storage/fe5467a6a163010b197fb20/2017/04/file_example_MP4_480_1_5MG.mp4';
     
     // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
     await new Promise(resolve => setTimeout(resolve, 1000));
