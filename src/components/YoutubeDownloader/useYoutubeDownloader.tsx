@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -130,33 +131,59 @@ export function useYoutubeDownloader() {
       
       console.log("İndirme cevabı:", data);
       
-      const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
+      // Tarayıcıya uygun dosya adı oluşturma
+      const safeFileName = videoInfo.title.replace(/[^\w\s]/gi, '') || videoInfo.videoId;
+      const fileName = `${safeFileName}_${selectedQuality}.${downloadType}`;
       
+      // Dosya indirme işlemi
+      const url = data.downloadUrl;
+      
+      // Dosyayı indirmek için Fetch API kullanalım
       try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`İndirme başarısız: ${response.status} ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        const downloadUrl = URL.createObjectURL(blob);
+        
         const link = document.createElement('a');
-        link.href = data.downloadUrl;
+        link.href = downloadUrl;
         link.download = fileName;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         
+        // Temizlik
         setTimeout(() => {
           document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
+          URL.revokeObjectURL(downloadUrl);
         }, 100);
         
         toast({
-          title: "İndirme başladı!",
-          description: `${fileName} dosyası indiriliyor.`,
+          title: "İndirme tamamlandı!",
+          description: `${fileName} dosyası indirildi.`,
         });
       } catch (downloadErr) {
-        console.error("Dosya indirme hatası:", downloadErr);
+        console.error("Blob indirme hatası:", downloadErr);
         
-        window.open(data.downloadUrl, '_blank');
+        // Alternatif indirme yöntemi
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
         
         toast({
-          title: "İndirme başladı",
-          description: "İndirme otomatik başlamadıysa, açılan sayfada dosyayı kaydedin.",
+          title: "İndirme başlatıldı",
+          description: "Tarayıcınız dosyayı indirmeye başladı.",
         });
       }
       

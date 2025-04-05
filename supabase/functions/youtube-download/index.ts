@@ -40,10 +40,10 @@ serve(async (req) => {
       Math.floor(Math.random() * 15) + 2 : 
       Math.floor(Math.random() * 50) + 15;
     
-    // Simülasyon - Örnek dosya URL'leri (Geçerli ve herkese açık URL'ler)
+    // Simülasyon - Daha güvenilir örnek dosya URL'leri
     const downloadUrl = downloadType === 'mp3' 
-      ? 'https://file-examples.com/storage/fe5467a6a163010b197fb20/2017/11/file_example_MP3_700KB.mp3'
-      : 'https://file-examples.com/storage/fe5467a6a163010b197fb20/2017/04/file_example_MP4_480_1_5MG.mp4';
+      ? 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
+      : 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4';
     
     // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
     await new Promise(resolve => setTimeout(resolve, 1000));
