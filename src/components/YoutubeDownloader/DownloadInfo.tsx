@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { VideoInfo, DownloadType } from './types';
+import type { VideoInfo, DownloadType } from './types';
 
 interface DownloadInfoProps {
   videoInfo: VideoInfo | null;

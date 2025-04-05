@@ -1,6 +1,6 @@
 
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
-import { VideoInfo, DownloadType } from './types';
+import type { VideoInfo, DownloadType } from './types';
 
 export async function fetchVideoInfo(url: string) {
   if (!isSupabaseConfigured()) {

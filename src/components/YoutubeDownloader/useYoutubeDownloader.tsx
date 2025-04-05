@@ -2,11 +2,9 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { VideoInfo, DownloadType } from './types';
+import type { VideoInfo, DownloadType } from './types';
 import { fetchVideoInfo, downloadVideo } from './api';
 import { openYoutubeLink } from './utils';
-
-export type { VideoInfo, DownloadType } from './types';
 
 export function useYoutubeDownloader() {
   const { toast } = useToast();
