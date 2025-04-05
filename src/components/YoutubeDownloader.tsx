@@ -87,12 +87,27 @@ const YoutubeDownloader: React.FC = () => {
         setDownloadProgress(i);
       }
       
-      // In a real implementation, we would trigger an actual download here
-      // For demo purposes, we'll just show a success message
+      // In a real implementation, we would get the video data here
+      // For demo, we'll create a download link with a Blob
+      const videoTitle = videoInfo.title.replace(/[^\w\s]/gi, '');
+      const fileName = `${videoTitle}_${selectedQuality}.mp4`;
+      
+      // Create a sample blob (this is just for demo purposes)
+      // In a real app, this would be the actual video data
+      const blob = new Blob(['This is a placeholder for actual video data'], { type: 'video/mp4' });
+      
+      // Create a download link and trigger it
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       
       toast({
         title: "Download complete!",
-        description: `The video has been downloaded in ${selectedQuality === 'highest' ? 'highest quality' : selectedQuality} format.`
+        description: `${videoTitle} has been downloaded in ${selectedQuality === 'highest' ? 'highest quality' : selectedQuality} format.`
       });
       
     } catch (error) {
