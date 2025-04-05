@@ -28,54 +28,112 @@ serve(async (req) => {
       )
     }
 
-    // Gerçek uygulamada burada videoyu indirme işlemi yapılmalıdır
-    // Şu anda sadece simülasyon yapıyoruz
-
-    // Güvenli bir dönüş değeri oluşturalım
-    const videoTitle = `YouTube Video ${videoId}`;
-
-    // Kalite ve dosya tipi ayarları
+    // YouTube URL oluştur
+    const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    
+    // Video bilgisi alımı
+    const videoInfoCommand = new Deno.Command("yt-dlp", {
+      args: ["--dump-json", youtubeUrl],
+    });
+    
+    const videoInfoOutput = await videoInfoCommand.output();
+    
+    if (!videoInfoOutput.success) {
+      console.error("Video bilgisi alma hatası:", new TextDecoder().decode(videoInfoOutput.stderr));
+      return new Response(
+        JSON.stringify({ error: "Video bilgisi alınamadı" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    // Video bilgilerini JSON olarak analiz et
+    const videoInfoText = new TextDecoder().decode(videoInfoOutput.stdout);
+    const videoInfo = JSON.parse(videoInfoText);
+    
+    const videoTitle = videoInfo.title || `YouTube Video ${videoId}`;
+    const thumbnailUrl = videoInfo.thumbnail || "";
+    
+    // İndirme formatı ve kalite ayarları
+    let format = "";
+    let outputFileName = "";
+    
+    if (downloadType === "mp3") {
+      // MP3 ses indirme
+      format = "bestaudio[ext=m4a]/bestaudio";
+      outputFileName = `youtube-${videoId}.mp3`;
+    } else {
+      // Video indirme
+      if (quality === "highest") {
+        format = "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best";
+      } else {
+        // Belirli çözünürlüğü belirt, örn: 720
+        format = `bestvideo[height<=${quality}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${quality}][ext=mp4]/best[height<=${quality}]`;
+      }
+      outputFileName = `youtube-${videoId}.mp4`;
+    }
+    
+    // İndirme komutunu oluştur
+    const downloadCommand = new Deno.Command("yt-dlp", {
+      args: [
+        "-f", format,
+        "-o", `/tmp/${outputFileName}`,
+        youtubeUrl
+      ],
+    });
+    
+    console.log("İndirme komutu çalıştırılıyor:", {
+      format,
+      outputFile: `/tmp/${outputFileName}`,
+      url: youtubeUrl
+    });
+    
+    // Videoyu indir
+    const downloadOutput = await downloadCommand.output();
+    
+    if (!downloadOutput.success) {
+      console.error("İndirme hatası:", new TextDecoder().decode(downloadOutput.stderr));
+      return new Response(
+        JSON.stringify({ error: "Video indirilemedi" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    // İndirilen dosyanın boyutunu kontrol et
+    const fileInfo = await Deno.stat(`/tmp/${outputFileName}`);
+    const fileSize = Math.ceil(fileInfo.size / (1024 * 1024)); // MB cinsinden
+    
+    // Dosyayı oku
+    const fileContent = await Deno.readFile(`/tmp/${outputFileName}`);
+    
+    // MIME tipini belirle
+    const contentType = downloadType === "mp3" ? "audio/mpeg" : "video/mp4";
+    
+    // Dosyayı sil (temizlik)
+    try {
+      await Deno.remove(`/tmp/${outputFileName}`);
+    } catch (e) {
+      console.error("Geçici dosya silinemedi:", e);
+    }
+    
+    // Dosya içeriğini base64 olarak kodla
+    const base64Content = btoa(String.fromCharCode(...new Uint8Array(fileContent)));
+    
     const qualityLabel = quality === 'highest' ? 'En Yüksek Kalite' : 
                         quality === 'mp3' ? 'MP3 Ses' : `${quality}p`;
     
-    const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
-    const fileSizeEstimate = downloadType === 'mp3' ? 
-      Math.floor(Math.random() * 15) + 2 : 
-      Math.floor(Math.random() * 50) + 15;
-    
-    // ÖNEMLİ NOT: Bu bir simülasyondur. 
-    // Gerçek bir uygulamada, bu videoları indirmek için sunucu tarafında 
-    // daha karmaşık bir işlem gerektirir.
-    
-    // Demo için sabit örnek dosyalar (güvenilir ve stabil kaynaklar)
-    const sampleFiles = {
-      mp3: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-      mp4: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4'
-    };
-    
-    const downloadUrl = downloadType === 'mp3' ? sampleFiles.mp3 : sampleFiles.mp4;
-    
-    // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log("İndirme simülasyonu tamamlandı:", {
-      videoId,
-      quality,
-      downloadType,
-      fileName: `youtube-${videoId}.${fileExtension}`,
-      downloadUrl
-    });
+    // Base64 kodlu dosyayı Data URL formatında dön
+    const dataUrl = `data:${contentType};base64,${base64Content}`;
     
     return new Response(
       JSON.stringify({
         success: true,
-        downloadUrl: downloadUrl,
-        fileName: `youtube-${videoId}.${fileExtension}`,
-        fileSize: `${fileSizeEstimate}MB`,
+        downloadUrl: dataUrl,
+        fileName: outputFileName,
+        fileSize: `${fileSize}MB`,
         quality: qualityLabel,
         title: videoTitle,
-        message: 'İndirme başarılı! (Bu bir simülasyondur, gerçek video indirilmemektedir)',
-        isSimulation: true, // Frontend'e bu değerin bir simülasyon olduğunu bildirelim
+        thumbnail: thumbnailUrl,
+        message: 'Video başarıyla indirildi!'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
