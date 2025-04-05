@@ -138,6 +138,14 @@ export function useYoutubeDownloader() {
       // Dosya indirme işlemi
       const url = data.downloadUrl;
       
+      // Simülasyon bilgisi gösterelim
+      if (data.isSimulation) {
+        toast({
+          title: "Demo Modu",
+          description: "Bu bir simülasyondur. Gerçek video yerine örnek bir dosya indirilecektir.",
+        });
+      }
+      
       // Dosyayı indirmek için Fetch API kullanalım
       try {
         const response = await fetch(url);
@@ -163,7 +171,7 @@ export function useYoutubeDownloader() {
         
         toast({
           title: "İndirme tamamlandı!",
-          description: `${fileName} dosyası indirildi.`,
+          description: `${fileName} dosyası indirildi. ${data.isSimulation ? '(Örnek dosya)' : ''}`,
         });
       } catch (downloadErr) {
         console.error("Blob indirme hatası:", downloadErr);
@@ -183,7 +191,7 @@ export function useYoutubeDownloader() {
         
         toast({
           title: "İndirme başlatıldı",
-          description: "Tarayıcınız dosyayı indirmeye başladı.",
+          description: `Tarayıcınız dosyayı indirmeye başladı. ${data.isSimulation ? '(Örnek dosya)' : ''}`,
         });
       }
       

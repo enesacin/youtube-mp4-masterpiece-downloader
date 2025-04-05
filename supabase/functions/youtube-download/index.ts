@@ -28,6 +28,9 @@ serve(async (req) => {
       )
     }
 
+    // Gerçek uygulamada burada videoyu indirme işlemi yapılmalıdır
+    // Şu anda sadece simülasyon yapıyoruz
+
     // Güvenli bir dönüş değeri oluşturalım
     const videoTitle = `YouTube Video ${videoId}`;
 
@@ -40,10 +43,17 @@ serve(async (req) => {
       Math.floor(Math.random() * 15) + 2 : 
       Math.floor(Math.random() * 50) + 15;
     
-    // Simülasyon - Daha güvenilir örnek dosya URL'leri
-    const downloadUrl = downloadType === 'mp3' 
-      ? 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'
-      : 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4';
+    // ÖNEMLİ NOT: Bu bir simülasyondur. 
+    // Gerçek bir uygulamada, bu videoları indirmek için sunucu tarafında 
+    // daha karmaşık bir işlem gerektirir.
+    
+    // Demo için sabit örnek dosyalar (güvenilir ve stabil kaynaklar)
+    const sampleFiles = {
+      mp3: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+      mp4: 'https://samplelib.com/lib/preview/mp4/sample-5s.mp4'
+    };
+    
+    const downloadUrl = downloadType === 'mp3' ? sampleFiles.mp3 : sampleFiles.mp4;
     
     // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -64,7 +74,8 @@ serve(async (req) => {
         fileSize: `${fileSizeEstimate}MB`,
         quality: qualityLabel,
         title: videoTitle,
-        message: 'İndirme başarılı! (Simülasyon)',
+        message: 'İndirme başarılı! (Bu bir simülasyondur, gerçek video indirilmemektedir)',
+        isSimulation: true, // Frontend'e bu değerin bir simülasyon olduğunu bildirelim
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
