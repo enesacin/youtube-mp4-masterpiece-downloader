@@ -87,7 +87,7 @@ export function useYoutubeDownloader() {
       
       // Dosya adını hazırla
       const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
-      const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
+      const fileName = downloadData.downloadFilename || `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
       
       // İndirme işlemini başlat
       initiateDownload(downloadData.downloadUrl, fileName);
@@ -96,7 +96,7 @@ export function useYoutubeDownloader() {
       
       toast({
         title: "İndirme başlatıldı",
-        description: "İndirme işlemi tarayıcınızda başlatıldı.",
+        description: "İndirme işlemi yeni pencerede başlatıldı. Pop-up engelleyicisi açıksa izin vermeniz gerekebilir.",
       });
       
     } catch (error) {

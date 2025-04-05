@@ -46,22 +46,30 @@ serve(async (req) => {
     const videoTitle = oembedData.title || `YouTube Video ${videoId}`;
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     
-    // Güvenli bir indirme hizmetine yönlendirme URL'si oluşturalım
-    // Bu, doğrudan bir indirme servisi API'sine gider
+    // Doğrudan indirme servisi oluşturalım
     let downloadUrl = '';
     let serviceType = '';
     
     if (downloadType === 'mp3') {
-      // MP3 için indirme servisi
-      downloadUrl = `https://api.vevioz.com/api/button/mp3/${videoId}`;
+      // MP3 için Y2mate formatındaki URL
+      downloadUrl = `https://www.y2mate.com/youtube-mp3/${videoId}`;
       serviceType = 'mp3';
     } else {
-      // Video için indirme servisi
-      // Kalite seçeneğine göre URL oluştur
+      // Video kalitesine göre indirme servisi URL'si
       const videoQuality = quality === 'highest' ? '1080' : quality;
-      downloadUrl = `https://api.vevioz.com/api/button/videos/${videoId}`;
+      downloadUrl = `https://www.y2mate.com/youtube/${videoId}`;
       serviceType = `mp4-${videoQuality}p`;
     }
+    
+    // Alternatif indirme servisleri (kullanıcıya seçenek sunabiliriz)
+    // Bu servislerin bazıları doğrudan indirme başlatabilir
+    const alternativeServices = {
+      'y2mate': downloadUrl,
+      'ssyoutube': `https://ssyoutube.com/watch?v=${videoId}`,
+      'ytmp3': `https://ytmp3.cc/youtube-to-mp3/?url=https://www.youtube.com/watch?v=${videoId}`,
+      'savefrom': `https://en.savefrom.net/1-youtube-video-downloader-400/?url=https://www.youtube.com/watch?v=${videoId}`,
+      'ytmp4': `https://ytmp4.click/youtube-to-mp4/?url=https://www.youtube.com/watch?v=${videoId}`
+    };
     
     // Başarılı yanıt döndür
     return new Response(
@@ -70,8 +78,10 @@ serve(async (req) => {
         videoId,
         title: videoTitle,
         thumbnail: thumbnailUrl,
-        downloadUrl, 
+        downloadUrl: alternativeServices.ytmp4, // Doğrudan indirme servisini kullan
+        alternativeServices,
         serviceType,
+        downloadFilename: `${videoTitle.replace(/[^\w\s-]/gi, '')}_${quality}.${downloadType}`,
         qualityLabel: quality === 'highest' ? 'En Yüksek Kalite' : `${quality}p`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

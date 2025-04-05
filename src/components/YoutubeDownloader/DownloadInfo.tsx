@@ -1,6 +1,7 @@
 
 import React from 'react';
 import type { VideoInfo, DownloadType } from './types';
+import { ExternalLink } from 'lucide-react';
 
 interface DownloadInfoProps {
   videoInfo: VideoInfo | null;
@@ -28,6 +29,13 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
         <li><strong>Video ID:</strong> {videoInfo.videoId}</li>
         <li><strong>Format:</strong> {downloadType === 'mp3' ? 'MP3 (Ses)' : 'MP4 (Video)'}</li>
         <li><strong>Kalite:</strong> {formatQuality(selectedQuality)}</li>
+        <li><strong>Tahmini Süre:</strong> {videoInfo.duration}</li>
+        <li className="text-xs mt-1 text-gray-500 dark:text-gray-400 italic">
+          <span className="flex items-center gap-1">
+            <ExternalLink size={12} />
+            İndirme işlemi, üçüncü parti servislerle gerçekleştirilmektedir.
+          </span>
+        </li>
       </ul>
     </div>
   );
