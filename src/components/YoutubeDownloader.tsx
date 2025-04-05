@@ -4,9 +4,9 @@ import YoutubeUrlInput from './YoutubeUrlInput';
 import VideoQualitySelector, { Quality } from './VideoQualitySelector';
 import DownloadProgress from './DownloadProgress';
 import VideoPreview from './VideoPreview';
-import { Download, FileDown } from 'lucide-react';
+import { Download, FileDown, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 const AVAILABLE_QUALITIES: Quality[] = [
   { label: 'En Yüksek', value: 'highest' },
@@ -36,6 +36,16 @@ const YoutubeDownloader: React.FC = () => {
     setUrl(inputUrl);
     setIsLoading(true);
     setVideoInfo(null);
+    
+    if (!isSupabaseConfigured()) {
+      toast({
+        variant: "destructive",
+        title: "Supabase yapılandırması eksik",
+        description: "Lütfen Supabase URL ve anahtar bilgilerini yapılandırın."
+      });
+      setIsLoading(false);
+      return;
+    }
     
     try {
       const { data, error } = await supabase.functions.invoke('youtube-info', {
@@ -79,6 +89,15 @@ const YoutubeDownloader: React.FC = () => {
 
   const handleDownload = async () => {
     if (!videoInfo) return;
+    
+    if (!isSupabaseConfigured()) {
+      toast({
+        variant: "destructive",
+        title: "Supabase yapılandırması eksik",
+        description: "Lütfen Supabase URL ve anahtar bilgilerini yapılandırın."
+      });
+      return;
+    }
     
     setIsDownloading(true);
     setDownloadProgress(0);
@@ -137,6 +156,18 @@ const YoutubeDownloader: React.FC = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
+      {!isSupabaseConfigured() && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-lg mb-4 text-amber-800 dark:text-amber-300 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-medium">Supabase yapılandırması eksik</h3>
+            <p className="text-sm mt-1">
+              Bu uygulama çalışmak için Supabase bilgilerine ihtiyaç duyar. Lütfen VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY değişkenlerini yapılandırın.
+            </p>
+          </div>
+        </div>
+      )}
+      
       <div className="space-y-4">
         <YoutubeUrlInput 
           onSubmit={handleSubmit} 
