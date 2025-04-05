@@ -133,12 +133,10 @@ export function useYoutubeDownloader() {
       
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
       
-      // Simüle edilmiş indirme işlemi - gerçek bir indirme yerine
-      // Bu bir tarayıcı tarafından desteklenen indirme bağlantısı yaratır
+      // Tarayıcıda doğrudan indirme işlemini başlat
       const a = document.createElement('a');
       a.href = data.downloadUrl;
       a.download = fileName;
-      a.target = '_blank';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

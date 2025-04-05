@@ -43,8 +43,16 @@ serve(async (req) => {
     // Bu bir simülasyondur - gerçek indirme fonksiyonu uygulanabilir
     // Gerçek uygulama için youtube-dl veya benzer bir uzak sunucuda çalışan servis kullanılmalıdır
     
-    // Simülasyon indirme URL'si - gerçek bir indirme URL'si sunucu tarafında oluşturulmalıdır
-    const downloadUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    // Simülasyon - doğrudan indirme URL'si oluşturuyoruz
+    // Gerçek bir downloader servisinde bu bir dosya içeriği olurdu
+    // Şimdilik YouTube'un video sayfasına değil, doğrudan indirilebilir bir link oluşturuyoruz
+    
+    // Not: Bu yalnızca bir simülasyondur ve gerçek bir indirme sağlamaz
+    // Gerçek bir serviste, bu bir dosya içeriği veya başka bir download URL olurdu
+    const baseUrl = "https://storage.googleapis.com/aitechtm/";
+    const downloadUrl = downloadType === 'mp3' 
+      ? `${baseUrl}sample-audio.mp3` 
+      : `${baseUrl}sample-video.mp4`;
     
     // Simüle edilmiş bir gecikme (gerçek indirme işlemi zaman alacaktır)
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -53,7 +61,8 @@ serve(async (req) => {
       videoId,
       quality,
       downloadType,
-      fileName: `youtube-${videoId}.${fileExtension}`
+      fileName: `youtube-${videoId}.${fileExtension}`,
+      downloadUrl
     });
     
     return new Response(
