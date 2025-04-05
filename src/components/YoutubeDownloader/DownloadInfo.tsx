@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { VideoInfo, DownloadType } from './useYoutubeDownloader';
+import { VideoInfo, DownloadType } from './types';
 
 interface DownloadInfoProps {
   videoInfo: VideoInfo | null;
