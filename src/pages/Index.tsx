@@ -11,11 +11,11 @@ const Index = () => {
           <div className="flex items-center justify-center mb-4">
             <Youtube size={36} className="text-youtube-red mr-2" />
             <h1 className="text-3xl md:text-4xl font-bold">
-              YouTube MP4 Masterpiece Downloader
+              YouTube Video İndirici
             </h1>
           </div>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Download YouTube videos and Shorts in high quality MP4 format
+            YouTube videolarını ve Shorts'ları yüksek kalitede indirin
           </p>
         </header>
         
@@ -24,15 +24,15 @@ const Index = () => {
         </main>
         
         <section className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-6">How It Works</h2>
+          <h2 className="text-2xl font-bold text-center mb-6">Nasıl Çalışır</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center">
               <div className="bg-youtube-red w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold">1</span>
               </div>
-              <h3 className="font-medium text-lg mb-2">Paste YouTube URL</h3>
+              <h3 className="font-medium text-lg mb-2">YouTube URL'si Yapıştır</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Copy and paste any YouTube video or Shorts URL
+                Herhangi bir YouTube video ya da Shorts URL'sini kopyalayıp yapıştırın
               </p>
             </div>
             
@@ -40,9 +40,9 @@ const Index = () => {
               <div className="bg-youtube-red w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold">2</span>
               </div>
-              <h3 className="font-medium text-lg mb-2">Select Quality</h3>
+              <h3 className="font-medium text-lg mb-2">Kalite Seçin</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Choose your preferred video quality
+                Tercih ettiğiniz video kalitesini seçin
               </p>
             </div>
             
@@ -50,9 +50,9 @@ const Index = () => {
               <div className="bg-youtube-red w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white font-bold">3</span>
               </div>
-              <h3 className="font-medium text-lg mb-2">Download MP4</h3>
+              <h3 className="font-medium text-lg mb-2">Videoyu İndirin</h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Get your high-quality MP4 video instantly
+                Yüksek kalitede video veya ses dosyanızı hemen edinin
               </p>
             </div>
           </div>
@@ -60,10 +60,10 @@ const Index = () => {
         
         <footer className="mt-16 text-center text-gray-500 dark:text-gray-400 text-sm">
           <p className="mb-2">
-            YouTube MP4 Masterpiece Downloader is for demonstration purposes only.
+            YouTube Video İndirici sadece gösterim amaçlıdır.
           </p>
           <p>
-            Please respect YouTube's Terms of Service and copyright laws.
+            Lütfen YouTube'un Hizmet Şartları'na ve telif hakkı yasalarına saygı gösterin.
           </p>
         </footer>
       </div>

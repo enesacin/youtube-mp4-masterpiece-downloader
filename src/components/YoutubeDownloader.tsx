@@ -7,14 +7,20 @@ import DownloadProgress from './DownloadProgress';
 import VideoPreview from './VideoPreview';
 import { Download, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase istemcisini oluştur
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const AVAILABLE_QUALITIES: Quality[] = [
-  { label: 'Highest', value: 'highest' },
+  { label: 'En Yüksek', value: 'highest' },
   { label: '1080p', value: '1080' },
   { label: '720p', value: '720' },
   { label: '480p', value: '480' },
   { label: '360p', value: '360' },
-  { label: 'Audio Only (MP3)', value: 'mp3' }
+  { label: 'Sadece Ses (MP3)', value: 'mp3' }
 ];
 
 const YoutubeDownloader: React.FC = () => {
@@ -38,67 +44,40 @@ const YoutubeDownloader: React.FC = () => {
     setVideoInfo(null);
     
     try {
-      // Extract video ID from URL
-      const videoId = extractVideoId(inputUrl);
+      // Supabase edge fonksiyonunu çağır
+      const { data, error } = await supabase.functions.invoke('youtube-info', {
+        body: { url: inputUrl }
+      });
       
-      if (!videoId) {
-        throw new Error("Could not extract video ID from URL");
+      if (error) {
+        throw new Error(error.message);
       }
       
-      // In a real implementation, we would fetch from a backend API
-      // For demo purposes, we're using a timeout to simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      if (!data || !data.videoId) {
+        throw new Error("Video bilgisi alınamadı");
+      }
       
-      const isYoutubeShorts = inputUrl.includes('/shorts/');
-      
-      // Get video thumbnail
-      const thumbnailUrl = isYoutubeShorts
-        ? `https://placehold.co/600x1200/333/FFF.webp?text=YouTube+Shorts+${videoId}`
-        : `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      
-      // Mock response with actual video ID
-      const mockVideoInfo = {
-        title: isYoutubeShorts 
-          ? `YouTube Shorts Video (${videoId})` 
-          : `YouTube Video (${videoId})`,
-        thumbnail: thumbnailUrl,
-        duration: isYoutubeShorts ? '0:30' : '10:30',
-        videoId: videoId
-      };
-      
-      setVideoInfo(mockVideoInfo);
+      setVideoInfo(data);
       
       toast({
-        title: "Video information retrieved",
-        description: "You can now download the video in your preferred quality."
+        title: "Video bilgisi alındı",
+        description: "Videouzu tercih ettiğiniz kalitede indirebilirsiniz."
       });
     } catch (error) {
+      console.error("Video bilgisi alınırken hata:", error);
       toast({
         variant: "destructive",
-        title: "Failed to retrieve video information",
-        description: "Please check the URL and try again."
+        title: "Video bilgisi alınamadı",
+        description: "Lütfen URL'yi kontrol edin ve tekrar deneyin."
       });
-      console.error("Error fetching video info:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const extractVideoId = (url: string): string | null => {
-    // Regular video URLs (both www.youtube.com and youtu.be)
-    let match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-    
-    // If not found, try to match Shorts URL
-    if (!match) {
-      match = url.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]{11})/);
-    }
-    
-    return match ? match[1] : null;
-  };
-
   const handleQualityChange = (quality: string) => {
     setSelectedQuality(quality);
-    // Set download type based on quality selection
+    // Kalite seçimine göre indirme tipini ayarla
     if (quality === 'mp3') {
       setDownloadType('mp3');
     } else {
@@ -113,50 +92,57 @@ const YoutubeDownloader: React.FC = () => {
     setDownloadProgress(0);
     
     try {
-      // Simulate download progress
-      const steps = 10;
-      for (let i = 0; i <= 100; i += (100/steps)) {
+      // İndirme işlemini simüle et
+      for (let i = 0; i <= 100; i += 10) {
         await new Promise(resolve => setTimeout(resolve, 300));
         setDownloadProgress(Math.min(i, 100));
       }
       
-      // Format filename with video ID for more realistic experience
-      const videoTitle = videoInfo.title.replace(/[^\w\s]/gi, '');
-      const fileExtension = downloadType === 'mp4' ? 'mp4' : 'mp3';
-      const quality = selectedQuality === 'highest' ? 'highest' : selectedQuality;
-      const fileName = `${videoTitle}_${quality}.${fileExtension}`;
+      // Supabase edge fonksiyonunu çağır
+      const { data, error } = await supabase.functions.invoke('youtube-download', {
+        body: { 
+          videoId: videoInfo.videoId,
+          quality: selectedQuality,
+          downloadType
+        }
+      });
       
-      // In a real implementation, this would be a call to a backend API
-      // that would handle the actual YouTube download process
+      if (error) {
+        throw new Error(error.message);
+      }
       
-      // Create a sample blob for demonstration
-      const mimeType = downloadType === 'mp4' ? 'video/mp4' : 'audio/mpeg';
-      const blobContent = `This is a placeholder for ${downloadType === 'mp4' ? 'video' : 'audio'} data for ID: ${videoInfo.videoId} at quality: ${selectedQuality}`;
-      const blob = new Blob([blobContent], { type: mimeType });
+      if (!data) {
+        throw new Error("İndirme işlemi başarısız");
+      }
       
-      // Create and trigger download
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // İndirme bağlantısını simüle et (gerçek uygulamada indirme URL'si döndürülmelidir)
+      const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${downloadType}`;
       
-      // Clean up the URL object
-      window.URL.revokeObjectURL(downloadUrl);
+      // Gerçek bir uygulamada, burası bir 'blob' indirmesi veya yönlendirme olacaktır
+      // Simülasyon için, bir dosya indirme diyaloğu açacağız
+      const downloadUrl = data.downloadUrl;
+      
+      if (downloadUrl) {
+        // Bir indirme bağlantısı oluştur
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
       
       toast({
-        title: "Download complete!",
-        description: `${videoTitle} has been downloaded as ${fileExtension.toUpperCase()} in ${selectedQuality === 'highest' ? 'highest quality' : selectedQuality} format.`
+        title: "İndirme tamamlandı!",
+        description: `${videoInfo.title} ${downloadType === 'mp3' ? 'ses dosyası' : 'video'} olarak indirildi.`
       });
       
     } catch (error) {
-      console.error("Download error:", error);
+      console.error("İndirme hatası:", error);
       toast({
         variant: "destructive",
-        title: "Download failed",
-        description: "An error occurred during download. Please try again."
+        title: "İndirme başarısız",
+        description: "İndirme sırasında bir hata oluştu. Lütfen tekrar deneyin."
       });
     } finally {
       setIsDownloading(false);
@@ -187,7 +173,7 @@ const YoutubeDownloader: React.FC = () => {
                 className="flex items-center gap-2 bg-youtube-red hover:bg-red-700 text-white transition-colors w-full sm:w-auto"
               >
                 {downloadType === 'mp4' ? <FileDown size={16} /> : <Download size={16} />}
-                <span>{isDownloading ? 'Downloading...' : `Download ${downloadType.toUpperCase()}`}</span>
+                <span>{isDownloading ? 'İndiriliyor...' : `${downloadType.toUpperCase()} İndir`}</span>
               </Button>
             </div>
             
@@ -206,11 +192,11 @@ const YoutubeDownloader: React.FC = () => {
       
       {videoInfo && (
         <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg text-sm mt-4">
-          <h3 className="font-medium mb-2">Download Information</h3>
+          <h3 className="font-medium mb-2">İndirme Bilgileri</h3>
           <ul className="space-y-1 text-gray-600 dark:text-gray-300">
             <li><strong>Video ID:</strong> {videoInfo.videoId}</li>
             <li><strong>Format:</strong> {downloadType.toUpperCase()}</li>
-            <li><strong>Quality:</strong> {selectedQuality === 'highest' ? 'Highest Available' : selectedQuality}</li>
+            <li><strong>Kalite:</strong> {selectedQuality === 'highest' ? 'En Yüksek' : selectedQuality}</li>
           </ul>
         </div>
       )}
