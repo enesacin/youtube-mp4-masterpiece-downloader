@@ -28,6 +28,7 @@ const YoutubeDownloader: React.FC = () => {
     selectedQuality,
     downloadType,
     embedCode,
+    fallbackUrl,
     handleSubmit,
     handleQualityChange,
     handleDownload
@@ -91,6 +92,7 @@ const YoutubeDownloader: React.FC = () => {
         selectedQuality={selectedQuality}
         downloadType={downloadType}
         embedCode={embedCode}
+        fallbackUrl={fallbackUrl}
       />
     </div>
   );

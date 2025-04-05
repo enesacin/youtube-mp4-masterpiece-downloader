@@ -49,37 +49,36 @@ export async function downloadVideo(videoInfo: VideoInfo, selectedQuality: strin
 }
 
 export function initiateDownload(downloadUrl: string, fileName: string) {
-  // Yeni pencerede doğrudan indirme başlat
-  const newWindow = window.open(downloadUrl, '_blank');
-  
-  // Yeni pencere açılmadı mı? (Pop-up engelleyici varsa)
-  if (!newWindow) {
-    console.warn('Popup engellendi, alternatif indirme yöntemi deneniyor');
-    
-    // Alternatif yöntem: iframe kullanarak indirme
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    if (iframe.contentWindow) {
-      iframe.contentWindow.location.href = downloadUrl;
+  // Dosyayı doğrudan indirmek için fetch kullanma
+  fetch(downloadUrl)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`İndirme başarısız oldu: ${response.status} ${response.statusText}`);
+      }
+      return response.blob();
+    })
+    .then(blob => {
+      // Blob'dan bir URL oluşturma
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // URL kullanarak bir indirme bağlantısı oluşturma
+      const downloadLink = document.createElement('a');
+      downloadLink.href = blobUrl;
+      downloadLink.download = fileName;
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      
+      // İndirme işlemini başlatma
+      downloadLink.click();
+      
+      // Temizleme
       setTimeout(() => {
-        document.body.removeChild(iframe);
+        document.body.removeChild(downloadLink);
+        window.URL.revokeObjectURL(blobUrl);
       }, 1000);
-    } else {
-      // Son çare: a etiketi ile indirme
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = fileName;
-      link.target = '_blank';
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-      }, 1000);
-    }
-  }
-  
-  console.log('İndirme işlemi başlatıldı (Yeni pencere veya alternatif yöntem ile)');
+    })
+    .catch(error => {
+      console.error("İndirme sırasında hata:", error);
+      alert(`İndirme sırasında bir hata oluştu: ${error.message}`);
+    });
 }

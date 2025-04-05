@@ -46,34 +46,32 @@ serve(async (req) => {
     const videoTitle = oembedData.title || `YouTube Video ${videoId}`;
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     
-    // Alternatif indirme servisleri
+    // Alternatif indirme servisleri - daha güvenilir servisler seçildi
     const alternativeDownloadUrls = {
       'mp3': [
-        `https://backend.singlelogin.me/api/converter/convert?url=${encodeURIComponent(youtubeUrl)}&format=mp3`,
-        `https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp3`,
-        `https://ymp4.download/api/json/mp3/${videoId}`
+        `https://api.vevioz.com/api/button/mp3/${videoId}`,
+        `https://api.ytbvideoly.com/api/button/mp3/${videoId}`,
+        `https://api.y2mate.guru/api/convert/mp3/${videoId}`
       ],
       'mp4': [
-        `https://backend.singlelogin.me/api/converter/convert?url=${encodeURIComponent(youtubeUrl)}&format=mp4&quality=${quality === 'highest' ? '1080' : quality}`,
-        `https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp4&quality=${quality === 'highest' ? '1080' : quality}`,
-        `https://ymp4.download/api/json/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}`
+        `https://api.vevioz.com/api/button/videos/${videoId}/${quality === 'highest' ? '1080' : quality}`,
+        `https://api.ytbvideoly.com/api/button/videos/${videoId}/${quality === 'highest' ? '1080' : quality}`,
+        `https://api.y2mate.guru/api/convert/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}`
       ]
     };
     
-    // Embed kodları (iframe veya script)
+    // Embed kodları (iframe)
     const embedCode = {
-      'mp3': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp3"></iframe>`,
-      'mp4': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://loader.to/api/button/?url=${encodeURIComponent(youtubeUrl)}&f=mp4&quality=${quality === 'highest' ? '1080' : quality}"></iframe>`
+      'mp3': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://api.vevioz.com/api/widget/mp3/${videoId}"></iframe>`,
+      'mp4': `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://api.vevioz.com/api/widget/mp4/${videoId}/${quality === 'highest' ? '1080' : quality}"></iframe>`
     };
     
-    // Doğrudan indirme bağlantıları
-    const directDownloadUrl = `https://dl.y2mate.com/api/${downloadType === 'mp3' ? 'youtube-mp3' : 'youtube'}/convert?url=${encodeURIComponent(youtubeUrl)}${downloadType === 'mp3' ? '&quality=320kbps' : `&quality=${quality === 'highest' ? '1080' : quality}p`}`;
+    // Çalışan doğrudan indirme bağlantıları (SSYouTube hizmeti)
+    const ssyoutubeUrl = `https://ssyoutube.com/api/convert?url=${encodeURIComponent(youtubeUrl)}`;
+    const savefromUrl = `https://en.savefrom.net/download-from-youtube/#url=${encodeURIComponent(youtubeUrl)}`;
     
-    // Daha güvenilir alternatif servisler
-    const yt1sApiUrl = `https://yt1s.com/api/ajaxSearch`;
-    const body = new URLSearchParams();
-    body.append('q', youtubeUrl);
-    body.append('vt', downloadType);
+    // Doğrudan indirme bağlantısı
+    const directDownloadUrl = `https://api.vevioz.com/api/button/${downloadType === 'mp3' ? 'mp3' : 'videos'}/${videoId}${downloadType === 'mp4' ? `/${quality === 'highest' ? '1080' : quality}` : ''}`;
     
     // Başarılı yanıt döndür
     return new Response(
@@ -82,7 +80,8 @@ serve(async (req) => {
         videoId,
         title: videoTitle,
         thumbnail: thumbnailUrl,
-        downloadUrl: directDownloadUrl, // Doğrudan indirme bağlantısı
+        downloadUrl: directDownloadUrl,
+        fallbackUrl: downloadType === 'mp3' ? ssyoutubeUrl : savefromUrl,
         alternativeUrls: downloadType === 'mp3' ? alternativeDownloadUrls.mp3 : alternativeDownloadUrls.mp4,
         embedCode: downloadType === 'mp3' ? embedCode.mp3 : embedCode.mp4,
         downloadType,

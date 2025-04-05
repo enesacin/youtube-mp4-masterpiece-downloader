@@ -1,20 +1,23 @@
 
 import React from 'react';
 import type { VideoInfo, DownloadType } from './types';
-import { ExternalLink, FileDown, Download } from 'lucide-react';
+import { ExternalLink, FileDown, Download, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DownloadInfoProps {
   videoInfo: VideoInfo | null;
   selectedQuality: string;
   downloadType: DownloadType;
   embedCode?: string | null;
+  fallbackUrl?: string | null;
 }
 
 const DownloadInfo: React.FC<DownloadInfoProps> = ({ 
   videoInfo, 
   selectedQuality, 
   downloadType,
-  embedCode
+  embedCode,
+  fallbackUrl
 }) => {
   if (!videoInfo) return null;
   
@@ -22,6 +25,12 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
     if (quality === 'highest') return 'En Yüksek (1080p)';
     if (quality === 'mp3') return 'MP3 (Sadece Ses)';
     return `${quality}p`;
+  };
+
+  const handleFallbackClick = () => {
+    if (fallbackUrl) {
+      window.open(fallbackUrl, '_blank');
+    }
   };
   
   return (
@@ -39,13 +48,22 @@ const DownloadInfo: React.FC<DownloadInfoProps> = ({
         <li className="text-xs mt-2 text-gray-500 dark:text-gray-400 italic">
           <span className="flex items-center gap-1">
             <ExternalLink size={12} />
-            İndirme başlamazsa, tarayıcının yerleşik indirme yöneticisi kullanılacaktır.
+            İndirme başlamazsa, aşağıdaki alternatif indirme yöntemlerini kullanabilirsiniz.
           </span>
         </li>
-        <li className="text-xs text-gray-500 dark:text-gray-400 italic">
-          İndirme başlamazsa, tarayıcınızın pop-up engelleyicisini kontrol edin.
-        </li>
       </ul>
+
+      {fallbackUrl && (
+        <Button 
+          onClick={handleFallbackClick} 
+          variant="outline" 
+          size="sm" 
+          className="mt-3 w-full flex items-center justify-center gap-2"
+        >
+          <AlertCircle size={14} />
+          Alternatif İndirme Sayfasını Aç
+        </Button>
+      )}
       
       {embedCode && (
         <div className="mt-4 border-t pt-3 border-gray-200 dark:border-gray-700">

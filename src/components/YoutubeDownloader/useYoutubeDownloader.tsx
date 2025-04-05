@@ -16,12 +16,14 @@ export function useYoutubeDownloader() {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [downloadType, setDownloadType] = useState<DownloadType>('mp4');
   const [embedCode, setEmbedCode] = useState<string | null>(null);
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
 
   const handleSubmit = async (inputUrl: string) => {
     setUrl(inputUrl);
     setIsLoading(true);
     setVideoInfo(null);
     setEmbedCode(null);
+    setFallbackUrl(null);
     
     if (!isSupabaseConfigured()) {
       toast({
@@ -91,6 +93,10 @@ export function useYoutubeDownloader() {
         setEmbedCode(downloadData.embedCode);
       }
       
+      if (downloadData.fallbackUrl) {
+        setFallbackUrl(downloadData.fallbackUrl);
+      }
+      
       // Dosya adını hazırla
       const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
       const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
@@ -102,7 +108,7 @@ export function useYoutubeDownloader() {
       
       toast({
         title: "İndirme başlatıldı",
-        description: "İndirme işlemi tarayıcınızda başlatıldı. Birazdan dosya indirilecek.",
+        description: "İndirme işlemi başlatıldı. Tarayıcınız indirmeyi başlatamazsa, alternatif indirme yöntemini deneyin.",
       });
       
     } catch (error) {
@@ -113,12 +119,13 @@ export function useYoutubeDownloader() {
         title: "İndirme başarısız",
         description: error instanceof Error ? 
           error.message : 
-          "İndirme sırasında bir hata oluştu. Alternatif olarak YouTube linkini açabiliriz."
+          "İndirme sırasında bir hata oluştu. Lütfen alternatif indirme yöntemini deneyin."
       });
       
-      // Hata durumunda YouTube'a yönlendirebiliriz
-      if (confirm("İndirme başarısız oldu. YouTube videosu sayfasını açmak ister misiniz?")) {
-        openYoutubeLink(videoInfo.videoId);
+      // Gömülü embed kodu varsa gösterilecek
+      if (!embedCode && videoInfo.videoId) {
+        const fallbackEmbed = `<iframe style="width:100%;height:60px;border:0;overflow:hidden;" scrolling="no" src="https://api.vevioz.com/api/widget/${downloadType === 'mp3' ? 'mp3' : 'mp4'}/${videoInfo.videoId}"></iframe>`;
+        setEmbedCode(fallbackEmbed);
       }
     } finally {
       setIsDownloading(false);
@@ -134,6 +141,7 @@ export function useYoutubeDownloader() {
     videoInfo,
     downloadType,
     embedCode,
+    fallbackUrl,
     handleSubmit,
     handleQualityChange,
     handleDownload
