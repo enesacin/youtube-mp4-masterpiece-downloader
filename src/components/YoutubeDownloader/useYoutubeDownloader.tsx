@@ -87,32 +87,33 @@ export function useYoutubeDownloader() {
       
       // Dosya adını hazırla
       const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
-      const fileName = downloadData.downloadFilename || `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
+      const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
       
-      // İndirme işlemini başlat
+      // İndirme işlemini başlat - artık doğrudan HTML5 download özelliği kullanıyoruz
       initiateDownload(downloadData.downloadUrl, fileName);
       
       setDownloadProgress(100);
       
       toast({
         title: "İndirme başlatıldı",
-        description: "İndirme işlemi yeni pencerede başlatıldı. Pop-up engelleyicisi açıksa izin vermeniz gerekebilir.",
+        description: "İndirme işlemi tarayıcınızda başlatıldı. Birazdan dosya indirilecek.",
       });
       
     } catch (error) {
       console.error("İndirme hatası:", error);
       
-      // Hata durumunda kullanıcıya YouTube bağlantısını veriyoruz
       toast({
         variant: "destructive",
         title: "İndirme başarısız",
         description: error instanceof Error ? 
           error.message : 
-          "İndirme sırasında bir hata oluştu. Alternatif olarak YouTube'u açabiliriz."
+          "İndirme sırasında bir hata oluştu. Alternatif olarak YouTube linkini açabiliriz."
       });
       
       // Hata durumunda YouTube'a yönlendirebiliriz
-      openYoutubeLink(videoInfo.videoId);
+      if (confirm("İndirme başarısız oldu. YouTube videosu sayfasını açmak ister misiniz?")) {
+        openYoutubeLink(videoInfo.videoId);
+      }
     } finally {
       setIsDownloading(false);
     }

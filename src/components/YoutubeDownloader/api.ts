@@ -49,25 +49,21 @@ export async function downloadVideo(videoInfo: VideoInfo, selectedQuality: strin
 }
 
 export function initiateDownload(downloadUrl: string, fileName: string) {
-  // Iframe ile yeni bir pencerede hizmet açarak indirme işlemini başlat
-  // Bu yöntem, download özelliğinin çalışmadığı durumlar için daha güvenilirdir
+  // Doğrudan HTML5 download özelliği ile indirme başlatma
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.setAttribute('download', fileName);
+  link.setAttribute('target', '_blank');
+  link.style.display = 'none';
+  document.body.appendChild(link);
   
-  // Open a new window to the download service
-  const downloadWindow = window.open(downloadUrl, '_blank');
+  // Tıklama simüle et
+  link.click();
   
-  // Create a fallback method with the download attribute
+  // Temizlik
   setTimeout(() => {
-    if (!downloadWindow || downloadWindow.closed || typeof downloadWindow.closed === 'undefined') {
-      // If popup was blocked, try the direct download approach
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.setAttribute('download', fileName);
-      link.setAttribute('target', '_blank');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      console.log('İndirme işlemi başlatıldı (alternatif metod)');
-    }
-  }, 1000);
+    document.body.removeChild(link);
+  }, 100);
+  
+  console.log('İndirme işlemi başlatıldı (HTML5 download özelliği ile)');
 }
