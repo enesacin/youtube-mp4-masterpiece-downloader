@@ -47,3 +47,18 @@ export async function downloadVideo(videoInfo: VideoInfo, selectedQuality: strin
   
   return data;
 }
+
+export function initiateDownload(downloadUrl: string, fileName: string) {
+  // Dosya indirme işlemini başlat
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  
+  setTimeout(() => {
+    document.body.removeChild(link);
+  }, 100);
+}

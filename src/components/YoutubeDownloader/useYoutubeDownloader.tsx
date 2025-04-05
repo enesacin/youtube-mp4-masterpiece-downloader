@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import type { VideoInfo, DownloadType } from './types';
-import { fetchVideoInfo, downloadVideo } from './api';
+import { fetchVideoInfo, downloadVideo, initiateDownload } from './api';
 import { openYoutubeLink } from './utils';
 
 export function useYoutubeDownloader() {
@@ -76,35 +76,43 @@ export function useYoutubeDownloader() {
     setDownloadProgress(10); // Başlangıç değeri
     
     try {
-      toast({
-        title: "Bilgilendirme",
-        description: "YouTube video indirme işlemi şu anda direkt olarak desteklenmemektedir. Supabase Edge Functions, yt-dlp gibi alt süreçleri çalıştıramaz."
-      });
+      // İndirme bilgisini al
+      const downloadData = await downloadVideo(videoInfo, selectedQuality, downloadType);
       
-      try {
-        await downloadVideo(videoInfo, selectedQuality, downloadType);
-      } catch (error) {
-        console.error("İndirme hatası:", error);
+      if (!downloadData.downloadUrl) {
+        throw new Error("İndirme URL'si alınamadı");
       }
+      
+      setDownloadProgress(50);
+      
+      // Dosya adını hazırla
+      const fileExtension = downloadType === 'mp3' ? 'mp3' : 'mp4';
+      const fileName = `${videoInfo.title.replace(/[^\w\s]/gi, '')}_${selectedQuality}.${fileExtension}`;
+      
+      // İndirme işlemini başlat
+      initiateDownload(downloadData.downloadUrl, fileName);
       
       setDownloadProgress(100);
       
-      // Alternatif olarak kullanıcıya YouTube indirme sitesinin bağlantısını gösterelim
       toast({
-        title: "Önerilen Alternatif",
-        description: "Çevrimiçi YouTube indirme sitelerini kullanabilir veya kendi sunucunuza yt-dlp kurarak video indirebilirsiniz.",
+        title: "İndirme başlatıldı",
+        description: "İndirme işlemi tarayıcınızda başlatıldı.",
       });
-      
-      // YouTube'a direkt link sağlayalım
-      openYoutubeLink(videoInfo.videoId);
       
     } catch (error) {
       console.error("İndirme hatası:", error);
+      
+      // Hata durumunda kullanıcıya YouTube bağlantısını veriyoruz
       toast({
         variant: "destructive",
         title: "İndirme başarısız",
-        description: error instanceof Error ? error.message : "İndirme sırasında bir hata oluştu. Supabase Edge Functions'ın sınırlamaları nedeniyle, YouTube video indirme işlemi desteklenmemektedir."
+        description: error instanceof Error ? 
+          error.message : 
+          "İndirme sırasında bir hata oluştu. Alternatif olarak YouTube'u açabiliriz."
       });
+      
+      // Hata durumunda YouTube'a yönlendirebiliriz
+      openYoutubeLink(videoInfo.videoId);
     } finally {
       setIsDownloading(false);
     }

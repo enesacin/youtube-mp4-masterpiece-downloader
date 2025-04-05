@@ -31,57 +31,51 @@ serve(async (req) => {
     // YouTube URL oluştur
     const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
     
-    // Not: Supabase Edge Functions, dış süreçleri çalıştırmaya izin vermez (yt-dlp gibi)
-    // Bu nedenle doğrudan YouTube API'sini kullanmamız gerekiyor
-    
     // Video bilgisi almak için YouTube oEmbed API'sini kullanalım
     const oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(youtubeUrl)}&format=json`;
     const oembedResponse = await fetch(oembedUrl);
-    const oembedData = await oembedResponse.json();
     
+    if (!oembedResponse.ok) {
+      return new Response(
+        JSON.stringify({ error: "YouTube API'si yanıt vermedi" }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+    
+    const oembedData = await oembedResponse.json();
     const videoTitle = oembedData.title || `YouTube Video ${videoId}`;
     const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
     
-    // Kalite bilgisini kullanarak videoyu indirmek için bir link oluşturalım
-    let videoUrl = '';
-    let qualityLabel = '';
+    // Güvenli bir indirme hizmetine yönlendirme URL'si oluşturalım
+    // Bu, doğrudan bir indirme servisi API'sine gider
+    let downloadUrl = '';
+    let serviceType = '';
     
     if (downloadType === 'mp3') {
-      // Doğrudan YouTube'dan MP3 indirmek mümkün değil
-      // Bu noktada son kullanıcıya bir mesaj gösterilebilir
-      return new Response(
-        JSON.stringify({
-          error: "Supabase Edge Functions üzerinde doğrudan YouTube'dan MP3 indirmek mümkün değildir. Bir sunucu uygulamasına ihtiyaç vardır."
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      // MP3 için indirme servisi
+      downloadUrl = `https://api.vevioz.com/api/button/mp3/${videoId}`;
+      serviceType = 'mp3';
     } else {
-      // Video indirme için seçenek oluşturalım
-      // Not: Bu, doğrudan YouTube'dan video indirmek için çalışmayacaktır
-      // Sadece arayüz testleri için bir yanıt döndürüyoruz
-      
-      if (quality === 'highest') {
-        qualityLabel = 'En Yüksek Kalite';
-      } else if (quality === 'mp3') {
-        qualityLabel = 'MP3 Ses';
-      } else {
-        qualityLabel = `${quality}p`;
-      }
-      
-      // Kullanıcıya bir bilgi mesajı
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Supabase Edge Functions üzerinde doğrudan YouTube video indirme işlemi desteklenmemektedir.",
-          message: "YouTube video indirme işlemi için yt-dlp gibi araçların çalıştırılabildiği bir sunucu gereklidir. Supabase Edge Functions, güvenlik nedeniyle alt süreçleri çalıştırmaya izin vermez.",
-          videoId,
-          title: videoTitle,
-          thumbnail: thumbnailUrl,
-          quality: qualityLabel
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      // Video için indirme servisi
+      // Kalite seçeneğine göre URL oluştur
+      const videoQuality = quality === 'highest' ? '1080' : quality;
+      downloadUrl = `https://api.vevioz.com/api/button/videos/${videoId}`;
+      serviceType = `mp4-${videoQuality}p`;
     }
+    
+    // Başarılı yanıt döndür
+    return new Response(
+      JSON.stringify({
+        success: true,
+        videoId,
+        title: videoTitle,
+        thumbnail: thumbnailUrl,
+        downloadUrl, 
+        serviceType,
+        qualityLabel: quality === 'highest' ? 'En Yüksek Kalite' : `${quality}p`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error("İndirme işlemi hatası:", error);
     return new Response(
