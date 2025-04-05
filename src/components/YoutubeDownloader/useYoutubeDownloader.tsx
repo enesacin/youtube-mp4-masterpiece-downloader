@@ -6,7 +6,7 @@ import { VideoInfo, DownloadType } from './types';
 import { fetchVideoInfo, downloadVideo } from './api';
 import { openYoutubeLink } from './utils';
 
-export { VideoInfo, DownloadType } from './types';
+export type { VideoInfo, DownloadType } from './types';
 
 export function useYoutubeDownloader() {
   const { toast } = useToast();
